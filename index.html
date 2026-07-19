@@ -469,6 +469,7 @@
     background:var(--bg-inset);
     aspect-ratio:9/16;
   }
+  .video-embed.wide{max-width:560px;aspect-ratio:16/9;}
   .video-embed iframe{width:100%;height:100%;border:0;display:block;}
   .video-caption{font-size:12px;color:var(--fg-faint);margin:0 0 14px;}
 
@@ -611,6 +612,11 @@
 
     <div class="why mode-normal"><b>Why a full desktop OS instead of a bare-bones server distro:</b> a headless-only server install is marginally lighter on idle memory, but this tutorial actually uses the desktop for the next several steps, while Claude does the infra work in front of you. Zorin is Ubuntu underneath, so everything below still works identically to a "proper" server distro — you're not giving anything up.</div>
     <div class="why mode-simple"><b>Why not the bare-bones version:</b> a stripped-down "server-only" install skips the very screen you're about to use for the next several steps. This kitchen needs a staff room for a while yet before it can run on autopilot.</div>
+
+    <div class="video-embed wide">
+      <iframe src="https://www.youtube.com/embed/tt0MIsPN38k" title="How to Use Zorin OS (Beginners Guide)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <p class="video-caption"><a href="https://www.youtube.com/watch?v=tt0MIsPN38k" target="_blank" rel="noopener">Watch on YouTube</a> — a beginner's walkthrough of Zorin OS, if you want the fuller picture before you install it.</p>
   </section>
 
   <!-- 03 -->
@@ -637,6 +643,11 @@ sudo apt install -y code</code></pre>
       <li>Search "Claude Code", install it.</li>
       <li>Sign in with your Claude account when prompted.</li>
     </ol>
+
+    <div class="video-embed wide">
+      <iframe src="https://www.youtube.com/embed/ph5DRCX_g6s" title="How to Use Claude Code in VS Code in 3 Minutes" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <p class="video-caption"><a href="https://www.youtube.com/watch?v=ph5DRCX_g6s" target="_blank" rel="noopener">Watch on YouTube</a> — the Claude Code chat panel itself, in about three minutes.</p>
   </section>
 
   <!-- 04 -->
@@ -852,21 +863,25 @@ Host devbox
     </div>
     <p class="video-caption"><a href="https://youtube.com/shorts/OAD6h3yimlc" target="_blank" rel="noopener">Watch on YouTube</a> — a quick look at what RustDesk is, from NetworkChuck.</p>
 
-    <div class="why mode-normal"><b>Why not route this through the tunnel like everything else:</b> the Cloudflare Tunnel used throughout this tutorial proxies HTTP(S) traffic — RustDesk's relay needs raw TCP/UDP, which doesn't pass through the same way. The practical no-extra-tool option is forwarding RustDesk's own handful of ports directly to this box on your router. That's a real, deliberate exception to "nothing is ever exposed directly" — a much smaller surface than opening your whole network, but still worth being deliberate about, not routing everything else this way.</div>
-    <div class="why mode-simple"><b>Why this one's different:</b> everything else in this tutorial reaches the box through the sealed delivery tunnel. This one needs its own small, specific door instead — five ports, nothing else — because the tunnel doesn't carry this particular kind of traffic.</div>
+    <div class="why mode-normal"><b>Why not route this through the tunnel like everything else:</b> the Cloudflare Tunnel used throughout this tutorial proxies HTTP(S) traffic — RustDesk's relay needs raw TCP/UDP, which doesn't pass through the same way. Rather than opening ports on your router, the cleaner fix is <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a>: it builds a private network between just your devices, so RustDesk never needs to be reachable from the open internet at all — zero open ports, anywhere. It's a little bit of extra setup, but it's simple, Claude can handle most of it, and you won't regret having it.</div>
+    <div class="why mode-simple"><b>Why this one's a bit different:</b> everything else in this tutorial reaches the box through the sealed delivery tunnel. This one instead gets its own private, invitation-only road between just your devices — nothing about it is reachable from the open internet, ever.</div>
 
-    <p class="mode-normal dim">If you'd rather not open anything on your router at all, <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a> is the standard alternative — it creates a private network between your devices with zero open ports, at the cost of installing it on every device that wants to connect.</p>
-
-    <p class="mode-normal">Ask Claude to set up the self-hosted relay:</p>
-    <pre><code>Self-host a RustDesk relay server (hbbs + hbbr) on this box using
-Docker. Once it's running, tell me the server address and public key
-I'll need to enter in the RustDesk client on my other devices.</code></pre>
+    <p class="mode-normal">Ask Claude to set it up — this installs Tailscale on the box, joins your private network, and self-hosts the RustDesk relay bound to that private address only:</p>
+    <pre><code>Install Tailscale on this box and connect it to my Tailscale account
+(open a browser tab for me to approve it). Then self-host a RustDesk
+relay server (hbbs + hbbr) using Docker, bound only to the box's
+Tailscale IP — not the public network. Tell me the Tailscale IP,
+server address, and public key I'll need for the RustDesk client on
+my other devices.</code></pre>
 
     <ol class="steplist">
-      <li>In your router's admin page, forward these ports to the box's local IP: <code>21115-21119 TCP</code>, <code>21116 UDP</code>.</li>
-      <li>Install the RustDesk client on your everyday computer, open its network settings, and enter the server address + key Claude gave you.</li>
+      <li>Install Tailscale on your everyday computer too (<a href="https://tailscale.com/download" target="_blank" rel="noopener">tailscale.com/download</a>) and sign into the same account — this puts both devices on the same private network.</li>
+      <li>Install the RustDesk client, open its network settings, and enter the Tailscale IP + key Claude gave you.</li>
       <li>Connect once while the monitor's still attached, to confirm the picture actually shows up before you rely on it.</li>
     </ol>
+
+    <div class="gotcha mode-normal"><b>One boot-order gotcha to know about:</b> Tailscale's network interface can come up a moment after Docker starts, which can make a Tailscale-bound container silently fail to bind its port on reboot — this has happened before on a similar box. The "Docker waits for network readiness" prompt further down this page fixes it; worth running once you've got RustDesk working.</div>
+    <div class="gotcha mode-simple"><b>One thing to know:</b> occasionally the private network takes a moment longer to wake up than Docker does after a reboot, which can make RustDesk silently stop working until the next restart. There's a prompt further down this page that fixes this permanently — worth running once RustDesk is up.</div>
   </section>
 
   <!-- 11 -->
