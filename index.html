@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Headless Dev Box — VS Code Remote Workflow</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230a0908'/%3E%3Ctext x='50' y='68' text-anchor='middle' font-family='monospace' font-size='58' fill='%23cc5500'%3E&gt;_%3C/text%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#0a0908;
+    --bg-raised:#141210;
+    --bg-inset:#100e0c;
+    --fg:#c8c4bc;
+    --fg-dim:#8a8479;
+    --fg-faint:#5a564e;
+    --accent:#cc5500;
+    --accent-bright:#ffa500;
+    --border:#332e28;
+    --border-soft:#221f1a;
+    --ok:#a6e3a1;
+    --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{background:var(--bg);}
+  @media (prefers-reduced-motion:no-preference){ html{scroll-behavior:smooth;} }
+  body{
+    margin:0;
+    min-height:100dvh;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 3px),
+      radial-gradient(ellipse at 50% -10%, #1a1611 0%, var(--bg) 55%);
+    color:var(--fg);
+    font-family:var(--mono);
+    font-size:15px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  ::selection{background:var(--accent);color:#0a0908;}
+
+  a{color:var(--accent-bright);text-decoration:none;border-bottom:1px solid rgba(255,165,0,0.35);}
+  a:hover{border-bottom-color:var(--accent-bright);}
+  a:focus-visible, button:focus-visible{outline:2px solid var(--accent-bright);outline-offset:2px;}
+
+  .page{
+    max-width:760px;
+    margin:0 auto;
+    padding:48px 24px 96px;
+  }
+
+  /* ---- mode switch ---- */
+  .mode-switch{
+    position:fixed;
+    top:14px;right:14px;
+    z-index:50;
+    display:flex;gap:2px;
+    padding:3px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    background:var(--bg-raised);
+    box-shadow:0 6px 20px -8px rgba(0,0,0,.7);
+  }
+  .mode-btn{
+    border:none;background:transparent;color:var(--fg-dim);
+    font-family:var(--mono);font-size:11px;letter-spacing:.03em;
+    padding:10px 14px;min-height:40px;border-radius:999px;cursor:pointer;
+  }
+  .mode-btn[aria-pressed="true"]{background:var(--accent);color:#0a0908;}
+  .mode-btn:hover{color:var(--fg);}
+  .mode-btn[aria-pressed="true"]:hover{color:#0a0908;}
+
+  /* mode content swap — default (no JS / unset) shows normal only */
+  .mode-simple{display:none;}
+  :root[data-mode="simple"] .mode-simple{display:block;}
+  :root[data-mode="simple"] li.mode-simple{display:list-item;}
+  :root[data-mode="simple"] span.mode-simple{display:inline;}
+  :root[data-mode="simple"] .mode-normal{display:none;}
+  .analogy-tag{
+    display:inline-block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--accent-bright);margin-right:6px;
+  }
+
+  /* ---- page-load entrance (one orchestrated moment) ---- */
+  @media (prefers-reduced-motion:no-preference){
+    .chrome{animation:rise .5s cubic-bezier(.16,1,.3,1) both;}
+    .tagline{animation:fadeIn .5s ease .1s both;}
+    .endstate li{animation:fadeIn .4s ease both;}
+    .endstate li:nth-child(1){animation-delay:.18s;}
+    .endstate li:nth-child(2){animation-delay:.24s;}
+    .endstate li:nth-child(3){animation-delay:.30s;}
+    .endstate li:nth-child(4){animation-delay:.36s;}
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+
+  /* ---- terminal chrome banner ---- */
+  .chrome{
+    border:1px solid var(--border);
+    border-radius:8px;
+    background:var(--bg-raised);
+    overflow:hidden;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.4), 0 20px 50px -20px rgba(0,0,0,0.6);
+  }
+  .chrome-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:9px 12px;
+    background:var(--bg-inset);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--border);}
+  .dot.a{background:#c15050;}
+  .dot.b{background:#c19a50;}
+  .dot.c{background:#5ca86a;}
+  .chrome-title{
+    margin-left:8px;
+    font-size:12px;
+    color:var(--fg-dim);
+    letter-spacing:0.02em;
+  }
+  .chrome-body{padding:28px 28px 30px;}
+
+  .prompt-line{
+    font-size:13px;
+    color:var(--fg-dim);
+  }
+  .prompt-line .sym{color:var(--accent-bright);}
+
+  h1{
+    margin:10px 0 6px;
+    font-size:26px;
+    letter-spacing:-0.01em;
+    color:var(--fg);
+    text-wrap:balance;
+  }
+  h1 .amp{color:var(--accent);}
+
+  .tagline{
+    margin:0;
+    color:var(--fg-dim);
+    font-size:14px;
+    max-width:56ch;
+  }
+
+  .cursor{
+    display:inline-block;
+    width:8px;height:16px;
+    background:var(--accent-bright);
+    margin-left:2px;
+    vertical-align:-3px;
+    animation:blink 1.1s steps(1) infinite;
+  }
+  @media (prefers-reduced-motion:reduce){ .cursor{animation:none;opacity:.7;} }
+  @keyframes blink{50%{opacity:0;}}
+
+  /* ---- endstate summary ---- */
+  .endstate{
+    margin-top:28px;
+    padding-top:16px;
+  }
+  .endstate ul{margin:10px 0 0;padding-left:0;list-style:none;}
+  .endstate li{
+    position:relative;
+    padding-left:20px;
+    margin:6px 0;
+    color:var(--fg);
+    font-size:13.5px;
+  }
+  .endstate li::before{
+    content:"›";
+    position:absolute;left:0;top:0;
+    color:var(--accent);
+  }
+
+  /* ---- toc ---- */
+  .toc{
+    margin:36px 0 0;
+    border:1px solid var(--border-soft);
+    border-radius:8px;
+    background:var(--bg-raised);
+    padding:16px 20px;
+  }
+  .toc-label{
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    color:var(--fg-faint);
+    margin:0 0 10px;
+  }
+  .toc ol{
+    margin:0;padding:0;list-style:none;
+    columns:2;column-gap:24px;
+  }
+  .toc li{break-inside:avoid;margin:4px 0;}
+  .toc a{
+    color:var(--fg-dim);
+    border-bottom:none;
+    font-size:13px;
+    display:inline-block;
+    padding:4px 0;
+  }
+  .toc a:hover{color:var(--accent-bright);}
+  .toc .n{color:var(--accent);margin-right:6px;}
+
+  /* ---- sections ---- */
+  section.step{
+    margin-top:56px;
+    padding-top:20px;
+    border-top:1px dashed var(--border);
+    scroll-margin-top:24px;
+  }
+  .step-eyebrow{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--fg-faint);
+    margin-bottom:6px;
+  }
+  .step-eyebrow .num{
+    color:var(--accent);
+    font-size:12px;
+  }
+  h2{
+    margin:0 0 12px;
+    font-size:19px;
+    color:var(--fg);
+    text-wrap:balance;
+  }
+  h2 code{font-size:0.85em;}
+
+  p{margin:0 0 14px;color:var(--fg);max-width:66ch;}
+  p.dim, li.dim{color:var(--fg-dim);}
+
+  .why{
+    margin:14px 0;
+    padding:10px 14px;
+    border-left:2px solid var(--accent);
+    background:rgba(204,85,0,0.06);
+    font-size:13px;
+    color:var(--fg-dim);
+    max-width:64ch;
+  }
+  .why b{color:var(--fg);}
+
+  ul.steplist, ol.steplist{margin:0 0 16px;padding-left:22px;}
+  ul.steplist li, ol.steplist li{margin:5px 0;font-size:14px;}
+  ul.checklist{margin:0 0 16px;padding-left:0;list-style:none;}
+  ul.checklist li{
+    position:relative;padding-left:24px;margin:8px 0;font-size:14px;
+  }
+  ul.checklist li::before{
+    content:"☐";position:absolute;left:0;top:0;color:var(--accent);
+  }
+
+  code{
+    font-family:var(--mono);
+    background:var(--bg-inset);
+    border:1px solid var(--border-soft);
+    border-radius:4px;
+    padding:1.5px 6px;
+    font-size:0.88em;
+    color:var(--accent-bright);
+  }
+
+  pre{
+    position:relative;
+    margin:14px 0;
+    border:1px solid var(--border);
+    border-radius:7px;
+    background:var(--bg-inset);
+    overflow-x:auto;
+  }
+  pre .pre-head{
+    display:flex;gap:6px;
+    padding:8px 12px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  pre .pre-head span{width:8px;height:8px;border-radius:50%;background:var(--border);}
+  pre code{
+    display:block;
+    background:transparent;
+    border:none;
+    padding:14px 16px 16px;
+    color:var(--fg);
+    font-size:13px;
+    line-height:1.6;
+    white-space:pre;
+  }
+  pre code .c{color:var(--fg-faint);} /* comment */
+  pre code .s{color:var(--accent-bright);} /* string/highlight */
+  pre code .p{color:var(--accent);} /* prompt char */
+
+  .copy-btn{
+    position:absolute;top:8px;right:8px;
+    display:flex;align-items:center;gap:5px;
+    min-height:32px;
+    padding:0 11px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.02em;
+    color:var(--fg-dim);
+    background:var(--bg-raised);
+    border:1px solid var(--border);
+    border-radius:6px;
+    cursor:pointer;
+    opacity:0;
+    transition:opacity .15s ease, color .15s ease, border-color .15s ease;
+  }
+  pre:hover .copy-btn, pre:focus-within .copy-btn, .copy-btn:focus-visible{opacity:1;}
+  .copy-btn:hover{color:var(--accent-bright);border-color:rgba(255,165,0,0.4);}
+  .copy-btn.copied{opacity:1;color:var(--ok);border-color:rgba(166,227,161,0.4);}
+  @media (hover:none){ .copy-btn{opacity:1;} } /* touch devices: no hover, always show */
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:14px 0;
+    font-size:13px;
+  }
+  th,td{
+    text-align:left;
+    padding:8px 10px;
+    border-bottom:1px solid var(--border-soft);
+    vertical-align:top;
+  }
+  th{color:var(--fg-faint);font-weight:normal;text-transform:uppercase;font-size:10.5px;letter-spacing:0.08em;}
+  td{color:var(--fg-dim);}
+  td.hl{color:var(--fg);}
+  td code{white-space:nowrap;}
+
+  .gotcha{
+    margin:14px 0;
+    padding:10px 14px;
+    border:1px solid rgba(255,165,0,0.25);
+    border-radius:6px;
+    background:rgba(255,165,0,0.05);
+    font-size:13px;
+    color:var(--fg-dim);
+  }
+  .gotcha b{color:var(--accent-bright);}
+
+  .tag{
+    display:inline-block;
+    font-size:10px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ok);
+    border:1px solid rgba(166,227,161,0.3);
+    background:rgba(166,227,161,0.06);
+    padding:2px 7px;
+    border-radius:4px;
+    margin-left:8px;
+    vertical-align:middle;
+  }
+
+  footer{
+    margin-top:64px;
+    padding-top:20px;
+    border-top:1px solid var(--border-soft);
+    color:var(--fg-faint);
+    font-size:12px;
+  }
+
+  @media (max-width:520px){
+    .toc ol{columns:1;}
+    .chrome-body{padding:20px 18px 22px;}
+    h1{font-size:22px;}
+    .mode-switch{top:10px;right:10px;}
+    .mode-btn{padding:8px 11px;font-size:10px;}
+  }
+</style>
+</head>
+<body>
+
+<script>document.documentElement.dataset.mode = localStorage.getItem('devbox-tutorial-mode') || 'normal';</script>
+
+<div class="mode-switch" role="group" aria-label="Reading mode">
+  <button type="button" class="mode-btn" data-mode-btn="normal">Normal</button>
+  <button type="button" class="mode-btn" data-mode-btn="simple">Simplified</button>
+</div>
+
+<div class="page">
+
+  <div class="chrome">
+    <div class="chrome-bar">
+      <span class="dot a"></span><span class="dot b"></span><span class="dot c"></span>
+      <span class="chrome-title">cmdward@devbox: ~/tutorials</span>
+    </div>
+    <div class="chrome-body">
+      <div class="prompt-line"><span class="sym">$</span> cat headless-devbox-setup.md</div>
+      <h1>Headless dev box <span class="amp">&</span> VS Code remote workflow<span class="cursor"></span></h1>
+
+      <p class="tagline mode-normal">A small dedicated machine that runs a full git-push-to-deploy loop — mini PC, headless from boot, Docker + Coolify + a Cloudflare Tunnel underneath, opened only through VS Code Remote-SSH. Written for someone doing this for the first time — no prior server experience assumed.</p>
+      <p class="tagline mode-simple">Picture opening a tiny takeout kitchen that only ever takes orders online — no dining room, no front counter. This guide sets it up: a kitchen (the little computer), a locked staff door only you can open (secure remote access), a shift manager who starts cooking the moment you update a recipe (auto-deploy), and a delivery service that gets the finished food to anyone on the internet without revealing exactly where the kitchen is (the tunnel). You run all of it from your own laptop, like managing the place over a radio, without ever standing in the kitchen yourself.</p>
+
+      <div class="endstate">
+        <ul>
+          <li class="mode-normal">No monitor or keyboard ever touches this box after the OS install.</li>
+          <li class="mode-simple">You never plug a screen or keyboard into it again — it sits somewhere out of the way and just works.</li>
+
+          <li class="mode-normal">You open VS Code, connect to <code>devbox</code>, and you have a full editor, terminal, and Claude Code running <em>on</em> it.</li>
+          <li class="mode-simple">You open VS Code on your own laptop like always, and it quietly reaches into the little box in the background — a remote control, not a trip to the kitchen.</li>
+
+          <li class="mode-normal"><code>git push</code> triggers a Coolify build; the app comes up on its own subdomain through this box's own tunnel.</li>
+          <li class="mode-simple">When you save and publish your work, the box notices and puts the finished result on a website address by itself — no extra button to press.</li>
+
+          <li class="mode-normal">Because it's plain x86, every Docker image and install script you'd use on a normal Linux server works here unmodified — no ARM compatibility tax.</li>
+          <li class="mode-simple">It's a regular little PC, not a special hobbyist one — so ordinary instructions just work, no translating required.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <nav class="toc">
+    <p class="toc-label">Contents</p>
+    <ol>
+      <li><a href="#pre"><span class="n">00</span>Before you start</a></li>
+      <li><a href="#hw"><span class="n">01</span>Pick the hardware</a></li>
+      <li><a href="#os"><span class="n">02</span>Install the OS headless</a></li>
+      <li><a href="#net"><span class="n">03</span>Static IP + SSH keys</a></li>
+      <li><a href="#docker"><span class="n">04</span>Install Docker</a></li>
+      <li><a href="#remote"><span class="n">05</span>VS Code Remote-SSH</a></li>
+      <li><a href="#tunnel"><span class="n">06</span>Cloudflare Tunnel</a></li>
+      <li><a href="#coolify"><span class="n">07</span>Install Coolify</a></li>
+      <li><a href="#github"><span class="n">08</span>Wire up GitHub</a></li>
+      <li><a href="#deploy"><span class="n">09</span>First deploy, end to end</a></li>
+      <li><a href="#loop"><span class="n">10</span>The daily loop</a></li>
+      <li><a href="#claude"><span class="n">11</span>Claude Code on the box</a></li>
+    </ol>
+  </nav>
+
+  <!-- 00 -->
+  <section class="step" id="pre">
+    <div class="step-eyebrow"><span class="num">00 /</span> Before you start</div>
+    <h2>What you need in hand first</h2>
+
+    <p class="mode-normal">Everything below assumes you're starting with nothing built yet. Have these four things ready before step 01:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> gathering ingredients before you start cooking — nothing below is hard, but it's annoying to stop halfway through because you're missing one of these.</p>
+
+    <ul class="checklist">
+      <li><b>An everyday computer</b> (Mac, Windows, or Linux) that you already use — this is where VS Code lives and where you'll do all your typing. <span class="mode-simple dim">This is your "walkie-talkie" — not the kitchen itself.</span></li>
+      <li><b>VS Code</b> installed on that everyday computer. Download it from <code>code.visualstudio.com</code> if you don't already have it.</li>
+      <li><b>A free GitHub account</b> — this is where your project's code will be stored and versioned. <span class="mode-simple dim">Think of it as the recipe book the kitchen reads from.</span></li>
+      <li><b>A domain name</b> added to a free <b>Cloudflare</b> account (any registrar works — Cloudflare just needs to manage its DNS). This tutorial uses <code>cmdward.xyz</code> as the example; swap in your own. <span class="mode-simple dim">This becomes the delivery address people use to find what the kitchen makes.</span></li>
+    </ul>
+
+    <p class="mode-normal dim">No prior Linux or server experience is assumed — every command below is explained before you run it.</p>
+    <p class="mode-simple dim">You don't need to already know Linux or "servers." Every command is like a recipe step: copy it exactly, one line at a time, and read the sentence above it to know what it does.</p>
+  </section>
+
+  <!-- 01 -->
+  <section class="step" id="hw">
+    <div class="step-eyebrow"><span class="num">01 /</span> Hardware</div>
+    <h2>Pick an x86 mini PC, not a Pi</h2>
+
+    <p class="mode-normal">A Raspberry Pi is ARM, and Coolify (the tool that watches your code and deploys it) is built and tested for x86 — ARM support exists but is community-patched and flaky. A mini PC in the same footprint runs the exact same install scripts as any normal Linux server, silently, for a few watts.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> choosing between a tiny hobbyist toy computer (Raspberry Pi) and a proper little PC. The toy is cheaper, but a lot of grown-up kitchen equipment (software) doesn't fit it well. A real mini PC costs a little more and everything just works, the same way it does on any normal computer.</p>
+
+    <table>
+      <tr><th>Pick</th><th>Chip</th><th>RAM / storage</th><th>Rough price</th></tr>
+      <tr><td class="hl">Beelink SER5</td><td>Ryzen 5 5560U</td><td>16GB / 500GB NVMe</td><td>~$300–330</td></tr>
+      <tr><td class="hl">Minisforum UM690</td><td>Ryzen 9 6900HX</td><td>16GB / 512GB NVMe</td><td>~$330–370</td></tr>
+      <tr><td class="hl">Beelink SER8</td><td>Ryzen 7 8845HS</td><td>32GB / 1TB NVMe</td><td>~$450–500</td></tr>
+      <tr><td class="hl">Minisforum UM790 Pro</td><td>Ryzen 9 7940HS</td><td>32GB / 1TB NVMe</td><td>~$470–550</td></tr>
+    </table>
+
+    <p class="mode-normal dim">Either brand handles Coolify plus several small Node/Postgres apps with room to spare. The Minisforum boards run noticeably hotter/louder under sustained load than the Beelinks (smaller chassis, same TDP class), worth factoring in if this box sits somewhere you'll hear it. Bottom row of each brand is the sane default; go up a tier only for headroom on heavier builds or more containers running at once.</p>
+    <p class="mode-simple dim">Any of these four can comfortably run several small apps at the same time — like a small kitchen that can cook a few dishes at once without breaking a sweat. The Minisforum ones tend to get warmer and a bit louder when working hard, like a car engine revving under load — worth knowing if it'll sit near your desk. When unsure, get the cheapest one; upgrade only if you already know you'll be running a lot at once.</p>
+  </section>
+
+  <!-- 02 -->
+  <section class="step" id="os">
+    <div class="step-eyebrow"><span class="num">02 /</span> Operating system</div>
+    <h2>Install Ubuntu Server, headless from the second boot</h2>
+
+    <p class="mode-normal">Download Ubuntu Server 24.04 LTS and flash it to a USB stick (balenaEtcher or Rufus, both free). Boot the mini PC from that USB, and run the installer <b>once</b> with a monitor and keyboard plugged in — about 10 minutes. During install, tick <b>"Install OpenSSH server"</b> and set a username and password.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> giving the box its brain for the very first time. You'll need to plug in a screen and keyboard just this once, like setting up a new TV out of the box. After this, you never touch it directly again — everything happens remotely, over the network.</p>
+
+    <div class="why mode-normal"><b>Why plug in a monitor at all:</b> Ubuntu's autoinstall/cloud-init path can skip this entirely, but it's a YAML config to get right for a one-time 10-minute task. Not worth it — do the install manually once, then never touch a monitor again.</div>
+    <div class="why mode-simple"><b>Why not skip the monitor too:</b> there is a way to do the whole install with zero screen involved, but it takes more setup than the 10 minutes it saves. Plugging in once is the easier trade.</div>
+
+    <p class="mode-normal">After the install finishes and reboots, unplug the monitor and keyboard. From here on, everything happens over SSH.</p>
+    <p class="mode-simple">Once it reboots successfully, unplug the screen and keyboard for good. From this point on, you'll only ever "talk" to this box through your laptop.</p>
+  </section>
+
+  <!-- 03 -->
+  <section class="step" id="net">
+    <div class="step-eyebrow"><span class="num">03 /</span> Network</div>
+    <h2>Static IP + key-only SSH</h2>
+
+    <p class="mode-normal">This step does two things: gives the box a permanent address on your home network, and locks its front door so only your laptop can open it — no password to guess or leak.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> giving the kitchen a fixed street address instead of one that changes every week, and then installing a lock that only opens for one specific key you own — no combination for anyone else to guess.</p>
+
+    <ol class="steplist">
+      <li>In your router's admin page, add a <b>DHCP reservation</b> for the box's MAC address, so it always gets the same local IP. (Simpler and more reliable than configuring a static IP on the box itself.)</li>
+      <li>If your everyday computer doesn't already have an SSH key, make one:</li>
+    </ol>
+    <pre><code><span class="c"># on your everyday computer — skip if `ls ~/.ssh/id_ed25519.pub` already shows a file</span>
+ssh-keygen -t ed25519 -C <span class="s">"your-email@example.com"</span>
+<span class="c"># press Enter through the prompts to accept the defaults</span></code></pre>
+    <p class="dim mode-normal" style="font-size:13px;">This creates a matched pair of files: a private key that never leaves your laptop, and a public key you're allowed to hand out. The box will only let in whoever holds the private half.</p>
+    <p class="dim mode-simple" style="font-size:13px;">This makes two matching pieces: one you keep secret on your laptop forever, and one you're allowed to give to the box. They only work as a pair — like a lock and its one matching key.</p>
+
+    <ol class="steplist" start="3">
+      <li>Copy your public key onto the box (you'll still log in with your password this one time):</li>
+    </ol>
+    <pre><code><span class="c"># from your everyday computer</span>
+ssh-copy-id cmdward@&lt;devbox-ip&gt;</code></pre>
+
+    <ol class="steplist" start="4">
+      <li>Lock the box down to key-only login, disabling passwords entirely:</li>
+    </ol>
+    <pre><code><span class="c"># on the box, once you're in over the key</span>
+sudo sed -i <span class="s">'s/^#\?PasswordAuthentication.*/PasswordAuthentication no/'</span> /etc/ssh/sshd_config
+sudo systemctl restart ssh</code></pre>
+
+    <ol class="steplist" start="5">
+      <li>Give it a short name on your everyday computer so you never type the IP again:</li>
+    </ol>
+    <pre><code><span class="c"># ~/.ssh/config on your everyday computer</span>
+Host devbox
+    HostName &lt;devbox-ip&gt;
+    User cmdward
+    IdentityFile ~/.ssh/id_ed25519</code></pre>
+  </section>
+
+  <!-- 04 -->
+  <section class="step" id="docker">
+    <div class="step-eyebrow"><span class="num">04 /</span> Container runtime</div>
+    <h2>Install Docker</h2>
+
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> installing standardized shipping containers in the kitchen. Every app you run later gets packed into one of these — same shape every time — so it runs the same way no matter what it's shipped to.</p>
+
+    <pre><code>curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker <span class="s">$USER</span>
+<span class="c"># log out and back in for the group change to take effect</span></code></pre>
+  </section>
+
+  <!-- 05 -->
+  <section class="step" id="remote">
+    <div class="step-eyebrow"><span class="num">05 /</span> Editor</div>
+    <h2>VS Code Remote-SSH</h2>
+
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> the walkie-talkie step. Your VS Code window stays on your own laptop and looks completely normal, but everything you type and run happens on the little box instead — like flying a drone remotely rather than climbing inside it.</p>
+
+    <ol class="steplist">
+      <li>In VS Code on your everyday computer, install the <b>Remote - SSH</b> extension (search the Extensions panel).</li>
+      <li><code>Ctrl+Shift+P</code> → <b>Remote-SSH: Connect to Host</b> → <code>devbox</code> (it reads the SSH config you wrote in step 03).</li>
+      <li>VS Code installs a small helper on the box automatically on first connect — no manual step.</li>
+      <li>Open a folder on the box. You now have a full editor, integrated terminal, and file explorer running on the mini PC; only the window itself is local.</li>
+    </ol>
+
+    <div class="gotcha mode-normal"><b>Extensions don't carry over.</b> Remote-SSH keeps a separate extension set per remote — reinstall the ones you actually use (GitLens included <span class="tag">worth it</span>) on the remote side too.</div>
+    <div class="gotcha mode-simple"><b>One thing to know:</b> any add-ons you use in VS Code have to be installed a second time for this remote connection specifically — they don't automatically come along for the ride.</div>
+  </section>
+
+  <!-- 06 -->
+  <section class="step" id="tunnel">
+    <div class="step-eyebrow"><span class="num">06 /</span> Public ingress</div>
+    <h2>Cloudflare Tunnel</h2>
+
+    <p class="mode-normal">This is what lets the outside internet reach an app running on the box without opening any ports on your router. It needs the domain from step 00 already added to your Cloudflare account.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a P.O. box. People send mail (web traffic) to a public address, and it gets forwarded to your actual house (the box) without anyone knowing exactly where that house is or needing a hole punched in your front wall.</p>
+
+    <pre><code><span class="c"># install cloudflared</span>
+curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-main.gpg
+echo <span class="s">"deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main"</span> | sudo tee /etc/apt/sources.list.d/cloudflared.list
+sudo apt update && sudo apt install cloudflared
+
+<span class="c"># log into your Cloudflare account, then create the tunnel</span>
+cloudflared tunnel login
+cloudflared tunnel create devbox</code></pre>
+
+    <p class="mode-normal">Write <code>/etc/cloudflared/config.yml</code> (sudo — this is the file the systemd service actually reads, not the copy in your home directory):</p>
+    <p class="mode-simple">Now tell the tunnel which local address to forward each delivery to — write this file (needs <code>sudo</code> since it's a system file):</p>
+    <pre><code>tunnel: &lt;tunnel-id-from-create&gt;
+credentials-file: /home/cmdward/.cloudflared/&lt;tunnel-id&gt;.json
+
+ingress:
+  - hostname: myapp.cmdward.xyz
+    service: http://localhost:3000
+  - service: http_status:404</code></pre>
+    <pre><code>cloudflared tunnel route dns devbox myapp.cmdward.xyz
+sudo cloudflared service install
+sudo systemctl enable --now cloudflared</code></pre>
+
+    <div class="gotcha mode-normal">Editing that config again later? Restart, don't reload — <code>sudo systemctl restart cloudflared</code>. The <code>reload</code> signal isn't wired up on this unit.</div>
+    <div class="gotcha mode-simple"><b>One thing to know:</b> if you change this file later, you have to fully restart the delivery service for it to notice — there's no quick "refresh" option.</div>
+  </section>
+
+  <!-- 07 -->
+  <section class="step" id="coolify">
+    <div class="step-eyebrow"><span class="num">07 /</span> PaaS layer</div>
+    <h2>Install Coolify</h2>
+
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> hiring a shift manager. Point it at a recipe book once, and from then on, whenever you update a recipe, it automatically starts cooking the new version — you don't stand over it supervising every dish.</p>
+
+    <pre><code>curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash</code></pre>
+
+    <p class="mode-normal">The dashboard comes up at <code>http://&lt;devbox-ip&gt;:8000</code>. Open it, finish the setup wizard, then mint an API token from <b>Profile → Keys &amp; Tokens</b> — useful later if you ever want to script deploys instead of clicking through the UI.</p>
+    <p class="mode-simple">Open <code>http://&lt;devbox-ip&gt;:8000</code> in a browser on your everyday computer, finish the short setup wizard, and that's your shift manager's office — this is where you'll tell it about new recipes going forward.</p>
+  </section>
+
+  <!-- 08 -->
+  <section class="step" id="github">
+    <div class="step-eyebrow"><span class="num">08 /</span> Source control</div>
+    <h2>Wire up GitHub</h2>
+
+    <p class="mode-normal">This connects the shift manager (Coolify) to the recipe book (your code) so it knows where to pull from. Simplest possible path to start:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> introducing your shift manager to the recipe book so it knows where to look for updates.</p>
+
+    <ol class="steplist">
+      <li>Create a repository on GitHub (public is simplest to start — no keys needed).</li>
+      <li>Push your project's code to it.</li>
+      <li>In Coolify, create a new Application → <b>Public Repository</b> → paste the repo's URL.</li>
+    </ol>
+
+    <p class="mode-normal dim">Once you're comfortable with the loop, switch to private repos: mint an ed25519 keypair, add the public half as a GitHub deploy key, upload the private half to Coolify, and connect via its private-repo flow instead. Not needed for a first pass.</p>
+    <p class="mode-simple dim">Later, once this feels normal, you can make the recipe book private and give the shift manager a special key instead of leaving it open to anyone — but that's a step for later, not for your first attempt.</p>
+  </section>
+
+  <!-- 09 -->
+  <section class="step" id="deploy">
+    <div class="step-eyebrow"><span class="num">09 /</span> Proof</div>
+    <h2>Deploy something trivial, end to end</h2>
+
+    <p class="mode-normal">Before building anything real on this box, prove the whole loop once with a throwaway app:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a test order before opening night — make sure a plate can actually travel the full route before you trust it with real customers.</p>
+
+    <ol class="steplist">
+      <li>Point Coolify at a small repo (even a static "hello" page).</li>
+      <li>Set the domain to the hostname you routed in step 06.</li>
+      <li>Deploy, then open <code>https://myapp.cmdward.xyz</code> from your phone on mobile data (not wifi), to confirm it's really public.</li>
+    </ol>
+
+    <div class="gotcha mode-normal">If the app talks to Postgres later, append <code>?sslmode=disable</code> to the connection string — Coolify's bundled Postgres doesn't speak SSL and most database libraries try it by default.</div>
+    <div class="gotcha mode-simple"><b>One thing to know:</b> if a future app needs to talk to a database, there's one extra setting the tutorial commands already account for — otherwise the database politely refuses the connection.</div>
+  </section>
+
+  <!-- 10 -->
+  <section class="step" id="loop">
+    <div class="step-eyebrow"><span class="num">10 /</span> Steady state</div>
+    <h2>What a normal day looks like</h2>
+
+    <ol class="steplist">
+      <li>Open VS Code → <b>Remote-SSH: devbox</b>.</li>
+      <li>Edit, run, test in the integrated terminal — it's really running on the mini PC.</li>
+      <li><code>git push</code>.</li>
+      <li>Coolify picks it up, rebuilds, redeploys.</li>
+      <li>Live at its subdomain through this box's tunnel.</li>
+    </ol>
+
+    <p class="mode-normal dim">No manual deploy step, no monitor, no separate dashboard you have to babysit — the whole loop runs from inside the editor.</p>
+    <p class="mode-simple dim">Every day looks the same: open your laptop, connect like normal, make changes, save and publish, and a few moments later the update is live on the internet. No extra steps to remember.</p>
+  </section>
+
+  <!-- 11 -->
+  <section class="step" id="claude">
+    <div class="step-eyebrow"><span class="num">11 /</span> Optional</div>
+    <h2>Claude Code, no browser bridge needed</h2>
+
+    <p class="mode-normal">Getting a terminal-based AI assistant into a browser dashboard usually means extra plumbing — a proxy, injected auth, iframe cookies — because the terminal has to render inside a web page. None of that applies here, because this box is only ever opened through VS Code:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a sous-chef who can also work the kitchen directly. Since you're already remotely "inside" the kitchen through VS Code, there's no extra door to build for them — they just walk in the one you already opened.</p>
+
+    <pre><code>npm install -g @anthropic-ai/claude-code</code></pre>
+    <p>Install it on the box, then just run <code>claude</code> in VS Code's own integrated terminal — it's already an authenticated SSH session, so there's nothing else to wire up.</p>
+  </section>
+
+  <footer>
+    <span class="mode-normal">A complete git-push-to-deploy loop on dedicated x86 hardware, controlled entirely from VS Code — no monitor, no browser dashboard required to build or ship.</span>
+    <span class="mode-simple">A small, quiet kitchen that cooks automatically whenever you update a recipe, run entirely by remote control from your own laptop.</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var root = document.documentElement;
+  var modeBtns = document.querySelectorAll('[data-mode-btn]');
+  function syncMode(){
+    var mode = root.dataset.mode || 'normal';
+    modeBtns.forEach(function(b){
+      b.setAttribute('aria-pressed', b.getAttribute('data-mode-btn') === mode ? 'true' : 'false');
+    });
+  }
+  modeBtns.forEach(function(b){
+    b.addEventListener('click', function(){
+      var mode = b.getAttribute('data-mode-btn');
+      root.dataset.mode = mode;
+      localStorage.setItem('devbox-tutorial-mode', mode);
+      syncMode();
+    });
+  });
+  syncMode();
+
+  document.querySelectorAll('pre').forEach(function(pre){
+    var codeEl = pre.querySelector('code');
+    if(!codeEl) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'copy-btn';
+    btn.textContent = 'Copy';
+    btn.setAttribute('aria-label', 'Copy code to clipboard');
+    pre.appendChild(btn);
+    btn.addEventListener('click', function(){
+      navigator.clipboard.writeText(codeEl.innerText).then(function(){
+        btn.textContent = 'Copied';
+        btn.classList.add('copied');
+        clearTimeout(btn._t);
+        btn._t = setTimeout(function(){
+          btn.textContent = 'Copy';
+          btn.classList.remove('copied');
+        }, 1500);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>
