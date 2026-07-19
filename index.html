@@ -613,6 +613,21 @@
 
     <p class="mode-normal dim">Minisforum is the actual budget brand here — both rows handle Coolify plus several small Node/Postgres apps with room to spare. Beelink's current lineup runs noticeably pricier for the same class of chip; only reach for the SER8 if you specifically want its (typically quieter, cooler) chassis and don't mind paying for it. UM690 Slim is the sane default; go up to the UM790 Pro only for headroom on heavier builds or more containers running at once. Prices shift — treat these as ballpark and check current listings before buying.</p>
     <p class="mode-simple dim">The top two are the real budget picks — either one comfortably runs several small apps at once, like a small kitchen that can cook a few dishes without breaking a sweat. The third option (Beelink) tends to run quieter and cooler, but costs a fair bit more for the same power — only worth it if that matters to you. When unsure, get the cheapest one.</p>
+
+    <div class="why mode-normal"><b>You don't have to buy new.</b> A secondhand or hand-me-down mini PC, office desktop, or old laptop (lid closed, running headless) works just as well if it clears these minimums:</div>
+    <div class="why mode-simple"><b>Buying new isn't required.</b> An old computer you already have, or a cheap secondhand one, works completely fine as long as it clears these minimums:</div>
+
+    <table>
+      <tr><th>Spec</th><th>Minimum</th></tr>
+      <tr><td class="hl">CPU</td><td>x86-64 (Intel or AMD) — no ARM. Roughly 2016 or newer is plenty.</td></tr>
+      <tr><td class="hl">RAM</td><td>8GB (16GB is genuinely more comfortable with Coolify + several containers running)</td></tr>
+      <tr><td class="hl">Storage</td><td>128GB+, and <b>SSD, not spinning HDD</b> — Docker builds on an old hard drive are painful</td></tr>
+      <tr><td class="hl">Network</td><td>Wired ethernet strongly preferred over wifi for a box meant to stay up 24/7</td></tr>
+      <tr><td class="hl">Boot mode</td><td>UEFI support (basically anything from the last ~10 years)</td></tr>
+    </table>
+
+    <p class="mode-normal dim">Below 8GB of RAM, Coolify itself plus a couple of containers starts swapping, and everything gets noticeably sluggish — that's the real floor, not the CPU.</p>
+    <p class="mode-simple dim">The RAM is the part that actually matters most — below 8GB, the kitchen starts running out of counter space and everything slows down, even if the stove itself (the CPU) is still fine.</p>
   </section>
 
   <!-- 02 -->
