@@ -844,6 +844,58 @@ Host devbox
     <p class="mode-simple dim">Every day looks the same: open your laptop, connect like normal, make changes, save and publish, and a few moments later the update is live on the internet. No extra steps to remember.</p>
   </section>
 
+  <!-- prompts -->
+  <section class="step" id="prompts">
+    <div class="step-head">
+      <div class="step-eyebrow"><span class="num">Bonus /</span> Harden before you disconnect</div>
+    </div>
+    <h2>Helpful prompts to run before you unplug the monitor</h2>
+
+    <p class="mode-normal">Everything below is optional, but worth five minutes while Claude and a screen are both still right there. Each one is a real failure mode, not a hypothetical — paste any of these into the chat panel as-is.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> installing smoke detectors and an autopilot before you stop watching the kitchen in person. None of this is required to get going — it's the difference between finding out something broke because a customer complained, versus finding out because the kitchen fixed itself.</p>
+
+    <p class="mode-normal dim"><b>Restart anything that crashes, automatically.</b> Docker containers don't restart themselves after a crash unless told to — the simplest possible safety net.</p>
+    <p class="mode-simple dim"><b>If something falls over, stand it back up.</b> By default, a crashed app just stays crashed until someone notices.</p>
+    <pre><code>Check every Docker container Coolify is running and make sure each one
+has a restart policy of "unless-stopped". Fix any that don't, and tell
+me which ones you changed.</code></pre>
+
+    <p class="mode-normal dim"><b>Watch a specific app and respin it if it goes unreachable.</b> A container can show "healthy" in Docker while still being unreachable from the outside — this exact thing has happened before on a similar box.</p>
+    <p class="mode-simple dim"><b>Check the food actually arrived, not just that the kitchen said it left.</b> Sometimes everything looks fine from the inside while nothing's actually getting through.</p>
+    <pre><code>Set up a systemd timer that checks every 5 minutes whether
+https://myapp.yourdomain.com responds. If it doesn't, restart that
+app's container automatically and log what happened. Show me the
+timer and service files before enabling them.</code></pre>
+
+    <p class="mode-normal dim"><b>Watch the tunnel itself, not just the apps behind it.</b> Cloudflare Tunnel already reconnects on ordinary network blips — there's no dynamic-IP problem to solve, since it's an outbound-only connection. The real gap is cloudflared getting stuck in a restart-loop and never recovering on its own, which has happened before from an unrelated DNS issue.</p>
+    <p class="mode-simple dim"><b>Make sure the delivery van didn't just stop running.</b> The van finds its way back after normal traffic — but it can occasionally stall completely and needs someone to notice and restart it.</p>
+    <pre><code>Set up a systemd timer that runs every 5 minutes and checks two
+things: that the cloudflared service is active, and that each of my
+public hostnames actually responds over HTTPS. If either check fails,
+restart cloudflared and log what happened so I can see it later.</code></pre>
+
+    <p class="mode-normal dim"><b>Rule out a stale DNS resolver before it causes cascading failures.</b> A plain, hand-edited <code>/etc/resolv.conf</code> with a dead nameserver listed first can make every lookup take ~5 seconds — slow enough that services relying on fast startup (like cloudflared) restart-loop for reasons that look unrelated to DNS.</p>
+    <p class="mode-simple dim"><b>Make sure the phone book isn't broken.</b> If every lookup takes 5 seconds because of a bad first entry, everything downstream looks broken in confusing, unrelated ways.</p>
+    <pre><code>Check whether /etc/resolv.conf is a proper symlink into
+systemd-resolved, not a plain file with a stale or unreachable
+nameserver listed first. If it's wrong, fix it and tell me what you
+changed.</code></pre>
+
+    <p class="mode-normal dim"><b>Make Docker wait for the network before starting containers.</b> If you ever add Tailscale, a VPN, or anything else Docker depends on, containers can start before that interface is ready and silently fail to bind their ports — invisible until you actually test from outside.</p>
+    <p class="mode-simple dim"><b>Don't open the kitchen before the road to it is finished.</b> If the kitchen starts before its own driveway is built, deliveries quietly fail without anyone noticing right away.</p>
+    <pre><code>If any of my containers depend on a network interface like Tailscale
+or a VPN being up first, set up a systemd unit that makes Docker wait
+for that interface before it starts. I don't want port bindings to
+silently fail after a reboot.</code></pre>
+
+    <p class="mode-normal dim"><b>Protect the desktop session from memory pressure.</b> Since this box runs a full desktop (not headless-only), <code>systemd-oomd</code> can kill the desktop session under memory pressure once Docker, Coolify, and several containers are all running at once — worth checking now, before it happens while you're not watching.</p>
+    <p class="mode-simple dim"><b>Don't let a busy day crash the whole kitchen.</b> Because this box has a real desktop underneath, it's possible for it to shut itself down under heavy load if nothing's guarding against it.</p>
+    <pre><code>Check whether systemd-oomd could kill my desktop session under memory
+pressure once Docker, Coolify, and a few app containers are all
+running. If it's a real risk on this box, mitigate it so a busy day
+doesn't crash my desktop session.</code></pre>
+  </section>
+
   <footer>
     <span class="mode-normal">Built sitting at the box with Claude driving the infra work, then handed off to VS Code Remote-SSH for everything after — no monitor, no browser dashboard required once you've graduated.</span>
     <span class="mode-simple">A small, quiet kitchen that cooks automatically whenever you update a recipe, set up with an assistant chef watching over your shoulder, run entirely by remote control from your own laptop once it's open for business.</span>
