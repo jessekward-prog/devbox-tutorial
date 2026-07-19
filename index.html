@@ -488,13 +488,13 @@
       <div class="prompt-line"><span class="sym">$</span> cat headless-devbox-setup.md</div>
       <h1>Headless dev box <span class="amp">&</span> VS Code remote workflow<span class="cursor"></span></h1>
 
-      <p class="tagline mode-normal">A small dedicated machine that runs a full git-push-to-deploy loop — mini PC, headless from boot, Docker + Coolify + a Cloudflare Tunnel underneath, opened only through VS Code Remote-SSH. Written for someone doing this for the first time — no prior server experience assumed.</p>
+      <p class="tagline mode-normal">A small dedicated machine that runs a full git-push-to-deploy loop — mini PC, run headless day to day, Docker + Coolify + a Cloudflare Tunnel underneath, opened only through VS Code Remote-SSH. Written for someone doing this for the first time — no prior server experience assumed.</p>
       <p class="tagline mode-simple">Picture opening a tiny takeout kitchen that only ever takes orders online — no dining room, no front counter. This guide sets it up: a kitchen (the little computer), a locked staff door only you can open (secure remote access), a shift manager who starts cooking the moment you update a recipe (auto-deploy), and a delivery service that gets the finished food to anyone on the internet without revealing exactly where the kitchen is (the tunnel). You run all of it from your own laptop, like managing the place over a radio, without ever standing in the kitchen yourself.</p>
 
       <div class="endstate">
         <ul>
-          <li class="mode-normal">No monitor or keyboard ever touches this box after the OS install.</li>
-          <li class="mode-simple">You never plug a screen or keyboard into it again — it sits somewhere out of the way and just works.</li>
+          <li class="mode-normal">You won't need a monitor or keyboard day to day — but because it's a full desktop underneath, you always can plug one in.</li>
+          <li class="mode-simple">Most days it sits somewhere out of the way with no screen attached — but the option to plug one in is never taken away.</li>
 
           <li class="mode-normal">You open VS Code, connect to <code>devbox</code>, and you have a full editor, terminal, and Claude Code running <em>on</em> it.</li>
           <li class="mode-simple">You open VS Code on your own laptop like always, and it quietly reaches into the little box in the background — a remote control, not a trip to the kitchen.</li>
@@ -524,7 +524,7 @@
     <ol>
       <li><a href="#pre"><span class="n">00</span>Before you start</a></li>
       <li><a href="#hw"><span class="n">01</span>Pick the hardware</a></li>
-      <li><a href="#os"><span class="n">02</span>Install the OS headless</a></li>
+      <li><a href="#os"><span class="n">02</span>Install the OS</a></li>
       <li><a href="#net"><span class="n">03</span>Static IP + SSH keys</a></li>
       <li><a href="#docker"><span class="n">04</span>Install Docker</a></li>
       <li><a href="#remote"><span class="n">05</span>VS Code Remote-SSH</a></li>
@@ -554,6 +554,9 @@
       <li><b>A free GitHub account</b> — this is where your project's code will be stored and versioned. <span class="mode-simple dim">Think of it as the recipe book the kitchen reads from.</span></li>
       <li><b>A domain name</b> added to a free <b>Cloudflare</b> account (any registrar works — Cloudflare just needs to manage its DNS). This tutorial uses <code>yourdomain.com</code> as the example; swap in your own. <span class="mode-simple dim">This becomes the delivery address people use to find what the kitchen makes.</span></li>
     </ul>
+
+    <div class="why mode-normal"><b>Where to buy the domain:</b> <a href="https://porkbun.com" target="_blank" rel="noopener">Porkbun</a> is the pick — prices close to what a domain actually costs, no bait-and-switch renewal hikes (the price you see at checkout is roughly the price you pay every year after), free WHOIS privacy and email forwarding included instead of upsold, and no dark-pattern checkout flow. For cheap: skip <code>.com</code> if you don't need it specifically — <code>.xyz</code>, <code>.dev</code>, and <code>.cc</code> are usually a fraction of the price, and Porkbun's "domain of the day" deal is worth a glance before you buy.</div>
+    <div class="why mode-simple"><b>Where to get the address:</b> think of domain sellers like mailbox providers — some make the first year cheap then quietly raise the price every year after, and charge extra just to keep your name off a public directory. <span class="analogy-tag">Recommended</span> Porkbun charges close to the real cost, tells you upfront what renewal costs, and throws in the privacy protection for free. Also: you don't need a <code>.com</code> — a <code>.xyz</code> or <code>.dev</code> address is usually much cheaper and works exactly the same.</div>
 
     <p class="mode-normal dim">No prior Linux or server experience is assumed — every command below is explained before you run it.</p>
     <p class="mode-simple dim">You don't need to already know Linux or "servers." Every command is like a recipe step: copy it exactly, one line at a time, and read the sentence above it to know what it does.</p>
@@ -588,16 +591,25 @@
       <div class="step-eyebrow"><span class="num">02 /</span> Operating system</div>
       <label class="step-check"><input type="checkbox"><span>Done</span></label>
     </div>
-    <h2>Install Ubuntu Server, headless from the second boot</h2>
+    <h2>Install Zorin OS — headless by choice, not by design</h2>
 
-    <p class="mode-normal">Download Ubuntu Server 24.04 LTS and flash it to a USB stick (balenaEtcher or Rufus, both free). Boot the mini PC from that USB, and run the installer <b>once</b> with a monitor and keyboard plugged in — about 10 minutes. During install, tick <b>"Install OpenSSH server"</b> and set a username and password.</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> giving the box its brain for the very first time. You'll need to plug in a screen and keyboard just this once, like setting up a new TV out of the box. After this, you never touch it directly again — everything happens remotely, over the network.</p>
+    <p class="mode-normal">Download <b>Zorin OS 17 Core</b> (free) and flash it to a USB stick (balenaEtcher or Rufus, both free). Boot the mini PC from that USB and run the graphical installer <b>once</b> with a monitor and keyboard plugged in — about 15–20 minutes.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> giving the box its brain for the very first time. You'll need to plug in a screen and keyboard just this once, like setting up a new computer out of the box.</p>
 
-    <div class="why mode-normal"><b>Why plug in a monitor at all:</b> Ubuntu's autoinstall/cloud-init path can skip this entirely, but it's a YAML config to get right for a one-time 10-minute task. Not worth it — do the install manually once, then never touch a monitor again.</div>
-    <div class="why mode-simple"><b>Why not skip the monitor too:</b> there is a way to do the whole install with zero screen involved, but it takes more setup than the 10 minutes it saves. Plugging in once is the easier trade.</div>
+    <div class="why mode-normal"><b>Why a full desktop OS instead of a bare-bones server distro:</b> a headless-only server install is marginally lighter on idle memory, but permanently gives up the option of ever plugging a screen into this box again without reinstalling. On hardware with 16GB+ RAM that saving is negligible — Zorin (Ubuntu underneath, so everything below still works identically) keeps the door open. You'll run it headless day to day; you're just not locked into it.</div>
+    <div class="why mode-simple"><b>Why not the bare-bones version:</b> a stripped-down "server-only" install uses a touch less memory, but shuts the door on ever using a screen with this box again. With how much memory these little PCs have, that trade isn't worth it — this way you keep the option, even if you rarely use it.</div>
 
-    <p class="mode-normal">After the install finishes and reboots, unplug the monitor and keyboard. From here on, everything happens over SSH.</p>
-    <p class="mode-simple">Once it reboots successfully, unplug the screen and keyboard for good. From this point on, you'll only ever "talk" to this box through your laptop.</p>
+    <p class="mode-normal">Zorin doesn't offer an "enable SSH" checkbox during install like a server distro would — turn it on once you're at the desktop, in a terminal:</p>
+    <p class="mode-simple">Once it's installed, open a terminal (Zorin's app menu → Terminal) and switch on the remote-access service — this is the one command that turns "a computer with a screen" into "a computer you can also reach from your laptop":</p>
+    <pre><code>sudo apt update
+sudo apt install -y openssh-server
+sudo systemctl enable --now ssh</code></pre>
+
+    <div class="gotcha mode-normal"><b>Turn off auto-suspend.</b> Desktop distros sleep after a period of inactivity by default — harmless with a monitor attached, but the box won't wake itself up for an incoming SSH connection once it's headless. <b>Settings → Power → Automatic Suspend → Off.</b> Screen blanking is fine to leave on; it doesn't affect SSH.</div>
+    <div class="gotcha mode-simple"><b>One thing to know:</b> by default the box will fall asleep if left alone for a while, the same as a laptop — except nothing's there to wake it back up once you've unplugged the screen. Turn that off in Settings → Power before you disconnect for good.</div>
+
+    <p class="mode-normal">After that, unplug the monitor and keyboard. From here on, everything happens over SSH — and if you ever want to sit down at it directly, you still can, any time.</p>
+    <p class="mode-simple">After that, unplug the screen and keyboard. From this point on, you'll mostly "talk" to this box through your laptop — but the back door's still there if you ever want to walk in.</p>
   </section>
 
   <!-- 03 -->
