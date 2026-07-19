@@ -695,6 +695,11 @@ through anything that needs my input.</code></pre>
     <p class="mode-normal">Docker is what lets Coolify package and run apps consistently. Claude installs it and adds your user to the <code>docker</code> group — roughly:</p>
     <p class="mode-simple"><span class="analogy-tag">Think of it as</span> Claude installing standardized shipping containers in the kitchen — every app gets packed the same way from here on. You don't need to type this, just know it's happening.</p>
 
+    <div class="video-embed wide">
+      <iframe src="https://www.youtube.com/embed/1fL54Q-wa54?start=95" title="What is Docker in 4 Minutes" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <p class="video-caption"><a href="https://www.youtube.com/watch?v=1fL54Q-wa54&t=95s" target="_blank" rel="noopener">Watch on YouTube</a> — what Docker actually is, in about four minutes.</p>
+
     <pre><code>curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker <span class="s">$USER</span></code></pre>
   </section>
@@ -709,6 +714,11 @@ sudo usermod -aG docker <span class="s">$USER</span></code></pre>
 
     <p class="mode-normal">This is what lets the outside internet reach an app on the box without opening any ports on your router. Claude installs cloudflared, logs into your Cloudflare account (a browser tab opens right here on the box for you to approve), creates a tunnel, and writes the ingress config — roughly:</p>
     <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a P.O. box. People send mail (web traffic) to a public address, and it gets forwarded to your actual house (the box) without anyone knowing exactly where that house is. A browser tab will pop up asking you to approve the connection — that's your one part in this step.</p>
+
+    <div class="video-embed wide">
+      <iframe src="https://www.youtube.com/embed/2Gku4u7X9SE" title="Cloudflare Explained in 5 Minutes (for beginners)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <p class="video-caption"><a href="https://www.youtube.com/watch?v=2Gku4u7X9SE" target="_blank" rel="noopener">Watch on YouTube</a> — what Cloudflare itself is, in general (not Tunnel-specific, but useful context if you've never used it).</p>
 
     <pre><code><span class="c"># install cloudflared</span>
 curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-main.gpg
