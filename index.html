@@ -488,16 +488,16 @@
       <div class="prompt-line"><span class="sym">$</span> cat headless-devbox-setup.md</div>
       <h1>Headless dev box <span class="amp">&</span> VS Code remote workflow<span class="cursor"></span></h1>
 
-      <p class="tagline mode-normal">A small dedicated machine that runs a full git-push-to-deploy loop — mini PC, run headless day to day, Docker + Coolify + a Cloudflare Tunnel underneath, opened only through VS Code Remote-SSH. Written for someone doing this for the first time — no prior server experience assumed.</p>
-      <p class="tagline mode-simple">Picture opening a tiny takeout kitchen that only ever takes orders online — no dining room, no front counter. This guide sets it up: a kitchen (the little computer), a locked staff door only you can open (secure remote access), a shift manager who starts cooking the moment you update a recipe (auto-deploy), and a delivery service that gets the finished food to anyone on the internet without revealing exactly where the kitchen is (the tunnel). You run all of it from your own laptop, like managing the place over a radio, without ever standing in the kitchen yourself.</p>
+      <p class="tagline mode-normal">A small dedicated machine you build sitting right in front of it — Zorin OS, VS Code, and Claude Code driving the actual infra work — then graduate to fully headless once everything's proven working. Written for someone doing this for the first time — no prior server experience assumed.</p>
+      <p class="tagline mode-simple">Picture opening a tiny takeout kitchen. You set it up standing right in the kitchen, with an assistant chef doing the actual cooking while you watch and approve — and only hand the keys to remote management once you've confirmed deliveries actually work. No dining room, no front counter, and eventually no need to ever stand in the kitchen again.</p>
 
       <div class="endstate">
         <ul>
-          <li class="mode-normal">You won't need a monitor or keyboard day to day — but because it's a full desktop underneath, you always can plug one in.</li>
-          <li class="mode-simple">Most days it sits somewhere out of the way with no screen attached — but the option to plug one in is never taken away.</li>
+          <li class="mode-normal">You do the whole build sitting at the box, with Claude driving the infra work in VS Code's chat panel — not you typing curl commands and YAML by hand.</li>
+          <li class="mode-simple">You watch it happen: an assistant chef does the actual cooking while you're standing right there, not a recipe card you follow alone.</li>
 
-          <li class="mode-normal">You open VS Code, connect to <code>devbox</code>, and you have a full editor, terminal, and Claude Code running <em>on</em> it.</li>
-          <li class="mode-simple">You open VS Code on your own laptop like always, and it quietly reaches into the little box in the background — a remote control, not a trip to the kitchen.</li>
+          <li class="mode-normal">Only once everything's proven working do you set up remote access and unplug the monitor for good.</li>
+          <li class="mode-simple">Only once the kitchen's fully running do you close the front door and start managing it from home instead.</li>
 
           <li class="mode-normal"><code>git push</code> triggers a Coolify build; the app comes up on its own subdomain through this box's own tunnel.</li>
           <li class="mode-simple">When you save and publish your work, the box notices and puts the finished result on a website address by itself — no extra button to press.</li>
@@ -524,16 +524,16 @@
     <ol>
       <li><a href="#pre"><span class="n">00</span>Before you start</a></li>
       <li><a href="#hw"><span class="n">01</span>Pick the hardware</a></li>
-      <li><a href="#os"><span class="n">02</span>Install the OS</a></li>
-      <li><a href="#net"><span class="n">03</span>Static IP + SSH keys</a></li>
-      <li><a href="#docker"><span class="n">04</span>Install Docker</a></li>
-      <li><a href="#remote"><span class="n">05</span>VS Code Remote-SSH</a></li>
+      <li><a href="#os"><span class="n">02</span>Install Zorin OS</a></li>
+      <li><a href="#vscode"><span class="n">03</span>VS Code + Claude Code, on the box</a></li>
+      <li><a href="#handoff"><span class="n">04</span>Hand the build off to Claude</a></li>
+      <li><a href="#docker"><span class="n">05</span>Docker</a></li>
       <li><a href="#tunnel"><span class="n">06</span>Cloudflare Tunnel</a></li>
-      <li><a href="#coolify"><span class="n">07</span>Install Coolify</a></li>
+      <li><a href="#coolify"><span class="n">07</span>Coolify</a></li>
       <li><a href="#github"><span class="n">08</span>Wire up GitHub</a></li>
       <li><a href="#deploy"><span class="n">09</span>First deploy, end to end</a></li>
-      <li><a href="#loop"><span class="n">10</span>The daily loop</a></li>
-      <li><a href="#claude"><span class="n">11</span>Claude Code on the box</a></li>
+      <li><a href="#graduate"><span class="n">10</span>Graduate to headless</a></li>
+      <li><a href="#loop"><span class="n">11</span>The daily loop</a></li>
     </ol>
   </nav>
 
@@ -545,21 +545,22 @@
     </div>
     <h2>What you need in hand first</h2>
 
-    <p class="mode-normal">Everything below assumes you're starting with nothing built yet. Have these four things ready before step 01:</p>
+    <p class="mode-normal">Everything below assumes you're starting with nothing built yet. Have these five things ready before step 01:</p>
     <p class="mode-simple"><span class="analogy-tag">Think of it as</span> gathering ingredients before you start cooking — nothing below is hard, but it's annoying to stop halfway through because you're missing one of these.</p>
 
     <ul class="checklist">
-      <li><b>An everyday computer</b> (Mac, Windows, or Linux) that you already use — this is where VS Code lives and where you'll do all your typing. <span class="mode-simple dim">This is your "walkie-talkie" — not the kitchen itself.</span></li>
-      <li><b>VS Code</b> installed on that everyday computer. Download it from <code>code.visualstudio.com</code> if you don't already have it.</li>
+      <li><b>An everyday computer</b> (Mac, Windows, or Linux) that you already use. <span class="mode-normal dim">You won't need it for most of this build — it only matters at the very end, for remote access.</span> <span class="mode-simple dim">This is your remote control for later — not needed for the build itself.</span></li>
+      <li><b>VS Code</b> — you'll install a fresh copy directly on the box in step 03. <span class="mode-normal dim">You'll only need a second copy on your everyday computer at the very end.</span> <span class="mode-simple dim">Think of it as the assistant chef's uniform — it goes on the kitchen itself first; you'll only need a spare for yourself later, once you're managing from home.</span></li>
       <li><b>A free GitHub account</b> — this is where your project's code will be stored and versioned. <span class="mode-simple dim">Think of it as the recipe book the kitchen reads from.</span></li>
       <li><b>A domain name</b> added to a free <b>Cloudflare</b> account (any registrar works — Cloudflare just needs to manage its DNS). This tutorial uses <code>yourdomain.com</code> as the example; swap in your own. <span class="mode-simple dim">This becomes the delivery address people use to find what the kitchen makes.</span></li>
+      <li><b>A Claude account</b> (claude.ai or an API key) — you'll sign into the Claude Code extension in step 03. <span class="mode-simple dim">This is how you hire the assistant chef.</span></li>
     </ul>
 
     <div class="why mode-normal"><b>Where to buy the domain:</b> <a href="https://porkbun.com" target="_blank" rel="noopener">Porkbun</a> is the pick — prices close to what a domain actually costs, no bait-and-switch renewal hikes (the price you see at checkout is roughly the price you pay every year after), free WHOIS privacy and email forwarding included instead of upsold, and no dark-pattern checkout flow. For cheap: skip <code>.com</code> if you don't need it specifically — <code>.xyz</code>, <code>.dev</code>, and <code>.cc</code> are usually a fraction of the price, and Porkbun's "domain of the day" deal is worth a glance before you buy.</div>
     <div class="why mode-simple"><b>Where to get the address:</b> think of domain sellers like mailbox providers — some make the first year cheap then quietly raise the price every year after, and charge extra just to keep your name off a public directory. <span class="analogy-tag">Recommended</span> Porkbun charges close to the real cost, tells you upfront what renewal costs, and throws in the privacy protection for free. Also: you don't need a <code>.com</code> — a <code>.xyz</code> or <code>.dev</code> address is usually much cheaper and works exactly the same.</div>
 
-    <p class="mode-normal dim">No prior Linux or server experience is assumed — every command below is explained before you run it.</p>
-    <p class="mode-simple dim">You don't need to already know Linux or "servers." Every command is like a recipe step: copy it exactly, one line at a time, and read the sentence above it to know what it does.</p>
+    <p class="mode-normal dim">No prior Linux or server experience is assumed — every command below is explained before Claude runs it.</p>
+    <p class="mode-simple dim">You don't need to already know Linux or "servers." Every command is explained before it happens — you're reading along, not memorizing a recipe.</p>
   </section>
 
   <!-- 01 -->
@@ -591,105 +592,83 @@
       <div class="step-eyebrow"><span class="num">02 /</span> Operating system</div>
       <label class="step-check"><input type="checkbox"><span>Done</span></label>
     </div>
-    <h2>Install Zorin OS — headless by choice, not by design</h2>
+    <h2>Install Zorin OS</h2>
 
-    <p class="mode-normal">Download <b>Zorin OS 17 Core</b> (free) and flash it to a USB stick (balenaEtcher or Rufus, both free). Boot the mini PC from that USB and run the graphical installer <b>once</b> with a monitor and keyboard plugged in — about 15–20 minutes.</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> giving the box its brain for the very first time. You'll need to plug in a screen and keyboard just this once, like setting up a new computer out of the box.</p>
+    <p class="mode-normal">Download <b>Zorin OS 17 Core</b> (free) and flash it to a USB stick (balenaEtcher or Rufus, both free). Boot the mini PC from that USB and run the graphical installer — about 15–20 minutes. Once it reboots, log in normally and <b>keep the monitor and keyboard connected</b> — you'll be working right here through the next several steps.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> giving the kitchen its very first staff member. Plug in a screen and keyboard, run through the install like setting up any new computer, and leave them connected — you'll be working right here for a while yet.</p>
 
-    <div class="why mode-normal"><b>Why a full desktop OS instead of a bare-bones server distro:</b> a headless-only server install is marginally lighter on idle memory, but permanently gives up the option of ever plugging a screen into this box again without reinstalling. On hardware with 16GB+ RAM that saving is negligible — Zorin (Ubuntu underneath, so everything below still works identically) keeps the door open. You'll run it headless day to day; you're just not locked into it.</div>
-    <div class="why mode-simple"><b>Why not the bare-bones version:</b> a stripped-down "server-only" install uses a touch less memory, but shuts the door on ever using a screen with this box again. With how much memory these little PCs have, that trade isn't worth it — this way you keep the option, even if you rarely use it.</div>
-
-    <p class="mode-normal">Zorin doesn't offer an "enable SSH" checkbox during install like a server distro would — turn it on once you're at the desktop, in a terminal:</p>
-    <p class="mode-simple">Once it's installed, open a terminal (Zorin's app menu → Terminal) and switch on the remote-access service — this is the one command that turns "a computer with a screen" into "a computer you can also reach from your laptop":</p>
-    <pre><code>sudo apt update
-sudo apt install -y openssh-server
-sudo systemctl enable --now ssh</code></pre>
-
-    <div class="gotcha mode-normal"><b>Turn off auto-suspend.</b> Desktop distros sleep after a period of inactivity by default — harmless with a monitor attached, but the box won't wake itself up for an incoming SSH connection once it's headless. <b>Settings → Power → Automatic Suspend → Off.</b> Screen blanking is fine to leave on; it doesn't affect SSH.</div>
-    <div class="gotcha mode-simple"><b>One thing to know:</b> by default the box will fall asleep if left alone for a while, the same as a laptop — except nothing's there to wake it back up once you've unplugged the screen. Turn that off in Settings → Power before you disconnect for good.</div>
-
-    <p class="mode-normal">After that, unplug the monitor and keyboard. From here on, everything happens over SSH — and if you ever want to sit down at it directly, you still can, any time.</p>
-    <p class="mode-simple">After that, unplug the screen and keyboard. From this point on, you'll mostly "talk" to this box through your laptop — but the back door's still there if you ever want to walk in.</p>
+    <div class="why mode-normal"><b>Why a full desktop OS instead of a bare-bones server distro:</b> a headless-only server install is marginally lighter on idle memory, but this tutorial actually uses the desktop for the next several steps, while Claude does the infra work in front of you. Zorin is Ubuntu underneath, so everything below still works identically to a "proper" server distro — you're not giving anything up.</div>
+    <div class="why mode-simple"><b>Why not the bare-bones version:</b> a stripped-down "server-only" install skips the very screen you're about to use for the next several steps. This kitchen needs a staff room for a while yet before it can run on autopilot.</div>
   </section>
 
   <!-- 03 -->
-  <section class="step" id="net">
+  <section class="step" id="vscode">
     <div class="step-head">
-      <div class="step-eyebrow"><span class="num">03 /</span> Network</div>
+      <div class="step-eyebrow"><span class="num">03 /</span> Editor</div>
       <label class="step-check"><input type="checkbox"><span>Done</span></label>
     </div>
-    <h2>Static IP + key-only SSH</h2>
+    <h2>Install VS Code + Claude Code, right here on the box</h2>
 
-    <p class="mode-normal">This step does two things: gives the box a permanent address on your home network, and locks its front door so only your laptop can open it — no password to guess or leak.</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> giving the kitchen a fixed street address instead of one that changes every week, and then installing a lock that only opens for one specific key you own — no combination for anyone else to guess.</p>
+    <p class="mode-normal">Install VS Code directly on the box, then add the Claude Code extension and sign in. This gives you a proper chat panel next to your files — not a bare terminal — and it's what actually drives the rest of this build.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> hiring your assistant chef and giving them a proper office, not just a walkie-talkie. Install VS Code right on this screen, add the Claude Code extension, and sign in. From here you'll mostly be talking to Claude through a chat panel, not typing commands yourself.</p>
+
+    <pre><code><span class="c"># on the box, in a terminal (Zorin's app menu → Terminal) —</span>
+<span class="c"># or use the Software store instead, if you'd rather click through it</span>
+wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+sudo sh -c <span class="s">'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'</span>
+sudo apt update
+sudo apt install -y code</code></pre>
 
     <ol class="steplist">
-      <li>In your router's admin page, add a <b>DHCP reservation</b> for the box's MAC address, so it always gets the same local IP. (Simpler and more reliable than configuring a static IP on the box itself.)</li>
-      <li>If your everyday computer doesn't already have an SSH key, make one:</li>
+      <li>Open VS Code, then the Extensions panel (<code>Ctrl+Shift+X</code>).</li>
+      <li>Search "Claude Code", install it.</li>
+      <li>Sign in with your Claude account when prompted.</li>
     </ol>
-    <pre><code><span class="c"># on your everyday computer — skip if `ls ~/.ssh/id_ed25519.pub` already shows a file</span>
-ssh-keygen -t ed25519 -C <span class="s">"your-email@example.com"</span>
-<span class="c"># press Enter through the prompts to accept the defaults</span></code></pre>
-    <p class="dim mode-normal" style="font-size:13px;">This creates a matched pair of files: a private key that never leaves your laptop, and a public key you're allowed to hand out. The box will only let in whoever holds the private half.</p>
-    <p class="dim mode-simple" style="font-size:13px;">This makes two matching pieces: one you keep secret on your laptop forever, and one you're allowed to give to the box. They only work as a pair — like a lock and its one matching key.</p>
-
-    <ol class="steplist" start="3">
-      <li>Copy your public key onto the box (you'll still log in with your password this one time):</li>
-    </ol>
-    <pre><code><span class="c"># from your everyday computer</span>
-ssh-copy-id &lt;your-username&gt;@&lt;devbox-ip&gt;</code></pre>
-
-    <ol class="steplist" start="4">
-      <li>Lock the box down to key-only login, disabling passwords entirely:</li>
-    </ol>
-    <pre><code><span class="c"># on the box, once you're in over the key</span>
-sudo sed -i <span class="s">'s/^#\?PasswordAuthentication.*/PasswordAuthentication no/'</span> /etc/ssh/sshd_config
-sudo systemctl restart ssh</code></pre>
-
-    <ol class="steplist" start="5">
-      <li>Give it a short name on your everyday computer so you never type the IP again:</li>
-    </ol>
-    <pre><code><span class="c"># ~/.ssh/config on your everyday computer</span>
-Host devbox
-    HostName &lt;devbox-ip&gt;
-    User &lt;your-username&gt;
-    IdentityFile ~/.ssh/id_ed25519</code></pre>
   </section>
 
   <!-- 04 -->
-  <section class="step" id="docker">
+  <section class="step" id="handoff">
     <div class="step-head">
-      <div class="step-eyebrow"><span class="num">04 /</span> Container runtime</div>
+      <div class="step-eyebrow"><span class="num">04 /</span> Delegate</div>
       <label class="step-check"><input type="checkbox"><span>Done</span></label>
     </div>
-    <h2>Install Docker</h2>
+    <h2>Hand the build off to Claude</h2>
 
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> installing standardized shipping containers in the kitchen. Every app you run later gets packed into one of these — same shape every time — so it runs the same way no matter what it's shipped to.</p>
+    <p class="mode-normal">Everything from here through the first deploy test is really one conversation with Claude in that chat panel. Download the starter kit below — right here in the box's own browser — unzip it, and point Claude at it before asking it to continue.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> handing your assistant chef their own recipe book instead of explaining your kitchen from scratch. Download it, unzip it, and Claude reads from it before doing anything below.</p>
 
-    <pre><code>curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker <span class="s">$USER</span>
-<span class="c"># log out and back in for the group change to take effect</span></code></pre>
+    <a class="download-btn" href="/obsidian-starter-kit.zip" download>
+      <span class="download-icon">↓</span>
+      <span>
+        <strong>obsidian-starter-kit.zip</strong>
+        <small>5 playbooks — Coolify deploys, Cloudflare Tunnel subdomains, API gotchas, and the "add professional touches" polish checklist. No credentials, all placeholders.</small>
+      </span>
+    </a>
+
+    <ol class="steplist">
+      <li>Unzip the kit somewhere on the box — e.g. <code>~/playbooks</code>.</li>
+      <li>Create a <code>CLAUDE.md</code> file (project-level, or <code>~/.claude/CLAUDE.md</code> for everywhere) with the pointer line from the kit's own <code>_index.md</code>.</li>
+      <li>In the Claude Code chat panel, tell it to continue — something like: <code>Read ~/playbooks/_index.md, then let's continue this tutorial — set up Docker, a Cloudflare Tunnel for yourdomain.com, install Coolify, and wire up GitHub. Walk me through anything that needs my input.</code></li>
+    </ol>
+
+    <p class="mode-normal dim">From step 05 on, this tutorial explains what Claude is doing and why — not commands for you to type yourself. You'll mostly be reading, approving <code>sudo</code> prompts, and making a few calls (your domain, your subdomain, your repo name).</p>
+    <p class="mode-simple dim">From here down, think of these sections as watching over your assistant chef's shoulder — you'll see what's happening and why, and you only step in when they need something only you have: a password, a domain name, a decision.</p>
   </section>
 
   <!-- 05 -->
-  <section class="step" id="remote">
+  <section class="step" id="docker">
     <div class="step-head">
-      <div class="step-eyebrow"><span class="num">05 /</span> Editor</div>
+      <div class="step-eyebrow"><span class="num">05 /</span> Container runtime</div>
       <label class="step-check"><input type="checkbox"><span>Done</span></label>
     </div>
-    <h2>VS Code Remote-SSH</h2>
+    <h2>Docker</h2>
 
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> the walkie-talkie step. Your VS Code window stays on your own laptop and looks completely normal, but everything you type and run happens on the little box instead — like flying a drone remotely rather than climbing inside it.</p>
+    <p class="mode-normal">Docker is what lets Coolify package and run apps consistently. Claude installs it and adds your user to the <code>docker</code> group — roughly:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> Claude installing standardized shipping containers in the kitchen — every app gets packed the same way from here on. You don't need to type this, just know it's happening.</p>
 
-    <ol class="steplist">
-      <li>In VS Code on your everyday computer, install the <b>Remote - SSH</b> extension (search the Extensions panel).</li>
-      <li><code>Ctrl+Shift+P</code> → <b>Remote-SSH: Connect to Host</b> → <code>devbox</code> (it reads the SSH config you wrote in step 03).</li>
-      <li>VS Code installs a small helper on the box automatically on first connect — no manual step.</li>
-      <li>Open a folder on the box. You now have a full editor, integrated terminal, and file explorer running on the mini PC; only the window itself is local.</li>
-    </ol>
-
-    <div class="gotcha mode-normal"><b>Extensions don't carry over.</b> Remote-SSH keeps a separate extension set per remote — reinstall the ones you actually use (GitLens included <span class="tag">worth it</span>) on the remote side too.</div>
-    <div class="gotcha mode-simple"><b>One thing to know:</b> any add-ons you use in VS Code have to be installed a second time for this remote connection specifically — they don't automatically come along for the ride.</div>
+    <pre><code>curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker <span class="s">$USER</span></code></pre>
   </section>
 
   <!-- 06 -->
@@ -700,21 +679,20 @@ sudo usermod -aG docker <span class="s">$USER</span>
     </div>
     <h2>Cloudflare Tunnel</h2>
 
-    <p class="mode-normal">This is what lets the outside internet reach an app running on the box without opening any ports on your router. It needs the domain from step 00 already added to your Cloudflare account.</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a P.O. box. People send mail (web traffic) to a public address, and it gets forwarded to your actual house (the box) without anyone knowing exactly where that house is or needing a hole punched in your front wall.</p>
+    <p class="mode-normal">This is what lets the outside internet reach an app on the box without opening any ports on your router. Claude installs cloudflared, logs into your Cloudflare account (a browser tab opens right here on the box for you to approve), creates a tunnel, and writes the ingress config — roughly:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a P.O. box. People send mail (web traffic) to a public address, and it gets forwarded to your actual house (the box) without anyone knowing exactly where that house is. A browser tab will pop up asking you to approve the connection — that's your one part in this step.</p>
 
     <pre><code><span class="c"># install cloudflared</span>
 curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-main.gpg
 echo <span class="s">"deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main"</span> | sudo tee /etc/apt/sources.list.d/cloudflared.list
 sudo apt update && sudo apt install cloudflared
 
-<span class="c"># log into your Cloudflare account, then create the tunnel</span>
+<span class="c"># opens a browser tab for you to approve</span>
 cloudflared tunnel login
 cloudflared tunnel create devbox</code></pre>
 
-    <p class="mode-normal">Write <code>/etc/cloudflared/config.yml</code> (sudo — this is the file the systemd service actually reads, not the copy in your home directory):</p>
-    <p class="mode-simple">Now tell the tunnel which local address to forward each delivery to — write this file (needs <code>sudo</code> since it's a system file):</p>
-    <pre><code>tunnel: &lt;tunnel-id-from-create&gt;
+    <pre><code><span class="c">/etc/cloudflared/config.yml</span>
+tunnel: &lt;tunnel-id-from-create&gt;
 credentials-file: /home/&lt;your-username&gt;/.cloudflared/&lt;tunnel-id&gt;.json
 
 ingress:
@@ -725,8 +703,8 @@ ingress:
 sudo cloudflared service install
 sudo systemctl enable --now cloudflared</code></pre>
 
-    <div class="gotcha mode-normal">Editing that config again later? Restart, don't reload — <code>sudo systemctl restart cloudflared</code>. The <code>reload</code> signal isn't wired up on this unit.</div>
-    <div class="gotcha mode-simple"><b>One thing to know:</b> if you change this file later, you have to fully restart the delivery service for it to notice — there's no quick "refresh" option.</div>
+    <div class="gotcha mode-normal">If Claude needs to edit that config again later, it'll restart the service, not reload — <code>reload</code> isn't wired up on this systemd unit. This is exactly the kind of gotcha the starter kit already has written down.</div>
+    <div class="gotcha mode-simple"><b>One thing to know:</b> changing this file always means a full restart of the delivery service, never a quick refresh — Claude already knows this from the kit, so it won't get stuck on it.</div>
   </section>
 
   <!-- 07 -->
@@ -735,14 +713,15 @@ sudo systemctl enable --now cloudflared</code></pre>
       <div class="step-eyebrow"><span class="num">07 /</span> PaaS layer</div>
       <label class="step-check"><input type="checkbox"><span>Done</span></label>
     </div>
-    <h2>Install Coolify</h2>
+    <h2>Coolify</h2>
 
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> hiring a shift manager. Point it at a recipe book once, and from then on, whenever you update a recipe, it automatically starts cooking the new version — you don't stand over it supervising every dish.</p>
+    <p class="mode-normal">Claude installs Coolify with one script. Then you'll open the dashboard yourself, right here in the box's browser, to finish the setup wizard and grab an API token so Claude can drive it from the chat panel too.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> hiring a shift manager. Claude does the hiring; you just open the office door once to shake hands. From then on, whenever a recipe updates, the shift manager starts cooking the new version on its own.</p>
 
     <pre><code>curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash</code></pre>
 
-    <p class="mode-normal">The dashboard comes up at <code>http://&lt;devbox-ip&gt;:8000</code>. Open it, finish the setup wizard, then mint an API token from <b>Profile → Keys &amp; Tokens</b> — useful later if you ever want to script deploys instead of clicking through the UI.</p>
-    <p class="mode-simple">Open <code>http://&lt;devbox-ip&gt;:8000</code> in a browser on your everyday computer, finish the short setup wizard, and that's your shift manager's office — this is where you'll tell it about new recipes going forward.</p>
+    <p class="mode-normal dim">Dashboard comes up at <code>http://localhost:8000</code> — open it right there on the box, finish the wizard, then mint an API token from <b>Profile → Keys &amp; Tokens</b> and hand it to Claude.</p>
+    <p class="mode-simple dim">Open <code>http://localhost:8000</code> in the box's own browser, finish the short setup wizard, and that's the shift manager's office door — open once, then Claude takes it from there.</p>
   </section>
 
   <!-- 08 -->
@@ -753,17 +732,17 @@ sudo systemctl enable --now cloudflared</code></pre>
     </div>
     <h2>Wire up GitHub</h2>
 
-    <p class="mode-normal">This connects the shift manager (Coolify) to the recipe book (your code) so it knows where to pull from. Simplest possible path to start:</p>
+    <p class="mode-normal">This connects the shift manager (Coolify) to the recipe book (your code). If you don't have a GitHub account yet, sign up now in the box's browser — Claude will use it from here. Claude will:</p>
     <p class="mode-simple"><span class="analogy-tag">Think of it as</span> introducing your shift manager to the recipe book so it knows where to look for updates.</p>
 
     <ol class="steplist">
       <li>Create a repository on GitHub (public is simplest to start — no keys needed).</li>
       <li>Push your project's code to it.</li>
-      <li>In Coolify, create a new Application → <b>Public Repository</b> → paste the repo's URL.</li>
+      <li>Connect it in Coolify as a <b>Public Repository</b>.</li>
     </ol>
 
-    <p class="mode-normal dim">Once you're comfortable with the loop, switch to private repos: mint an ed25519 keypair, add the public half as a GitHub deploy key, upload the private half to Coolify, and connect via its private-repo flow instead. Not needed for a first pass.</p>
-    <p class="mode-simple dim">Later, once this feels normal, you can make the recipe book private and give the shift manager a special key instead of leaving it open to anyone — but that's a step for later, not for your first attempt.</p>
+    <p class="mode-normal dim">Once you're comfortable with the loop, ask Claude to switch a repo to private: it'll mint an ed25519 keypair, add the public half as a GitHub deploy key, upload the private half to Coolify, and reconnect via the private-repo flow instead. Not needed for a first pass.</p>
+    <p class="mode-simple dim">Later, once this feels normal, you can make the recipe book private and give the shift manager a special key instead of leaving it open to anyone — just ask, it's a step for later.</p>
   </section>
 
   <!-- 09 -->
@@ -774,30 +753,84 @@ sudo systemctl enable --now cloudflared</code></pre>
     </div>
     <h2>Deploy something trivial, end to end</h2>
 
-    <p class="mode-normal">Before building anything real on this box, prove the whole loop once with a throwaway app:</p>
+    <p class="mode-normal">Before trusting this box with anything real, Claude proves the whole loop once with a throwaway app, while you watch:</p>
     <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a test order before opening night — make sure a plate can actually travel the full route before you trust it with real customers.</p>
 
     <ol class="steplist">
       <li>Point Coolify at a small repo (even a static "hello" page).</li>
-      <li>Set the domain to the hostname you routed in step 06.</li>
-      <li>Deploy, then open <code>https://myapp.yourdomain.com</code> from your phone on mobile data (not wifi), to confirm it's really public.</li>
+      <li>Set the domain to the hostname from step 06.</li>
+      <li>Deploy, then <em>you</em> open <code>https://myapp.yourdomain.com</code> from your phone on mobile data (not wifi), to confirm it's really public.</li>
     </ol>
 
-    <div class="gotcha mode-normal">If the app talks to Postgres later, append <code>?sslmode=disable</code> to the connection string — Coolify's bundled Postgres doesn't speak SSL and most database libraries try it by default.</div>
-    <div class="gotcha mode-simple"><b>One thing to know:</b> if a future app needs to talk to a database, there's one extra setting the tutorial commands already account for — otherwise the database politely refuses the connection.</div>
+    <div class="gotcha mode-normal">If the app talks to Postgres later, the connection string needs <code>?sslmode=disable</code> appended — Coolify's bundled Postgres doesn't speak SSL and most database libraries try it by default. Exactly the kind of gotcha the starter kit already has written down, so Claude won't trip on it.</div>
+    <div class="gotcha mode-simple"><b>One thing to know:</b> if a future app needs to talk to a database, there's one extra setting Claude already knows to add — otherwise the database politely refuses the connection.</div>
   </section>
 
   <!-- 10 -->
+  <section class="step" id="graduate">
+    <div class="step-head">
+      <div class="step-eyebrow"><span class="num">10 /</span> Graduation</div>
+      <label class="step-check"><input type="checkbox"><span>Done</span></label>
+    </div>
+    <h2>Graduate to headless</h2>
+
+    <p class="mode-normal">Everything's proven working. Now set up remote access and unplug the monitor for good — test before you disconnect anything.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> closing the kitchen's front door and setting up the intercom — but testing the intercom before you actually lock the door.</p>
+
+    <ol class="steplist">
+      <li>In your router's admin page, add a <b>DHCP reservation</b> for the box's MAC address, so it always gets the same local IP. (Claude can't reach your router — this one's on you.)</li>
+      <li>Ask Claude to enable SSH on the box:</li>
+    </ol>
+    <pre><code>sudo apt install -y openssh-server
+sudo systemctl enable --now ssh</code></pre>
+
+    <ol class="steplist" start="3">
+      <li>On your <b>everyday computer</b> — the one Claude isn't running on — generate an SSH key if you don't already have one, then copy it to the box (you'll still use your password this one time):</li>
+    </ol>
+    <pre><code><span class="c"># on your everyday computer — skip if `ls ~/.ssh/id_ed25519.pub` already shows a file</span>
+ssh-keygen -t ed25519 -C <span class="s">"your-email@example.com"</span>
+ssh-copy-id &lt;your-username&gt;@&lt;devbox-ip&gt;</code></pre>
+
+    <ol class="steplist" start="4">
+      <li>Ask Claude to lock the box to key-only login:</li>
+    </ol>
+    <pre><code>sudo sed -i <span class="s">'s/^#\?PasswordAuthentication.*/PasswordAuthentication no/'</span> /etc/ssh/sshd_config
+sudo systemctl restart ssh</code></pre>
+
+    <ol class="steplist" start="5">
+      <li>On your everyday computer: install VS Code + the <b>Remote-SSH</b> extension, add a config entry, then connect.</li>
+    </ol>
+    <pre><code><span class="c"># ~/.ssh/config on your everyday computer</span>
+Host devbox
+    HostName &lt;devbox-ip&gt;
+    User &lt;your-username&gt;
+    IdentityFile ~/.ssh/id_ed25519</code></pre>
+    <p class="mode-normal dim"><code>Ctrl+Shift+P</code> → <b>Remote-SSH: Connect to Host</b> → <code>devbox</code>. Open a terminal in that window and run something trivial — confirm it's really reaching the box before you go any further.</p>
+    <p class="mode-simple dim">Connect, open a terminal, and run something simple — make sure the intercom actually works before you lock the front door.</p>
+
+    <ol class="steplist" start="6">
+      <li>Ask Claude to turn off auto-suspend, so the box doesn't fall asleep with no screen to wake it:</li>
+    </ol>
+    <pre><code>gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type <span class="s">'nothing'</span></code></pre>
+
+    <div class="gotcha mode-normal"><b>Test before you disconnect.</b> Confirm the Remote-SSH terminal actually works, from step 5, before unplugging anything. If something's subtly wrong with SSH, you want to find out with the monitor still connected, not after.</div>
+    <div class="gotcha mode-simple"><b>One thing to know:</b> don't skip testing the remote connection first — if it's broken, you want to find out while you can still see the screen, not after it's already unplugged.</div>
+
+    <p class="mode-normal">Once that's confirmed, unplug the monitor and keyboard. From here on, everything happens over SSH — and because it's a full desktop underneath, you can always plug a screen back in later if you want to.</p>
+    <p class="mode-simple">Once that's confirmed, unplug the screen and keyboard. From here on, you manage the kitchen from home — but the back door's still there if you ever want to walk in.</p>
+  </section>
+
+  <!-- 11 -->
   <section class="step" id="loop">
     <div class="step-head">
-      <div class="step-eyebrow"><span class="num">10 /</span> Steady state</div>
+      <div class="step-eyebrow"><span class="num">11 /</span> Steady state</div>
       <label class="step-check"><input type="checkbox"><span>Done</span></label>
     </div>
     <h2>What a normal day looks like</h2>
 
     <ol class="steplist">
       <li>Open VS Code → <b>Remote-SSH: devbox</b>.</li>
-      <li>Edit, run, test in the integrated terminal — it's really running on the mini PC.</li>
+      <li>Edit, run, test in the integrated terminal — it's really running on the mini PC. Claude Code is still there too, if you want it for the actual coding, not just the setup.</li>
       <li><code>git push</code>.</li>
       <li>Coolify picks it up, rebuilds, redeploys.</li>
       <li>Live at its subdomain through this box's tunnel.</li>
@@ -807,43 +840,9 @@ sudo systemctl enable --now cloudflared</code></pre>
     <p class="mode-simple dim">Every day looks the same: open your laptop, connect like normal, make changes, save and publish, and a few moments later the update is live on the internet. No extra steps to remember.</p>
   </section>
 
-  <!-- 11 -->
-  <section class="step" id="claude">
-    <div class="step-head">
-      <div class="step-eyebrow"><span class="num">11 /</span> Optional</div>
-      <label class="step-check"><input type="checkbox"><span>Done</span></label>
-    </div>
-    <h2>Claude Code, no browser bridge needed</h2>
-
-    <p class="mode-normal">Getting a terminal-based AI assistant into a browser dashboard usually means extra plumbing — a proxy, injected auth, iframe cookies — because the terminal has to render inside a web page. None of that applies here, because this box is only ever opened through VS Code:</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a sous-chef who can also work the kitchen directly. Since you're already remotely "inside" the kitchen through VS Code, there's no extra door to build for them — they just walk in the one you already opened.</p>
-
-    <pre><code>npm install -g @anthropic-ai/claude-code</code></pre>
-    <p>Install it on the box, then just run <code>claude</code> in VS Code's own integrated terminal — it's already an authenticated SSH session, so there's nothing else to wire up.</p>
-  </section>
-
-  <!-- kit -->
-  <section class="step" id="kit">
-    <div class="step-head">
-      <div class="step-eyebrow"><span class="num">Bonus /</span> Take it further</div>
-    </div>
-    <h2>Bring this workflow into your own Claude / VS Code</h2>
-
-    <p class="mode-normal">Everything above came from a small library of playbooks an AI assistant reads before doing infra work, instead of being re-explained every session. This is a generalized starter pack of the same playbooks used to build and ship this page — drop it into your own Obsidian vault (or any folder your assistant can read) and point your <code>CLAUDE.md</code> at it.</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> handing your AI assistant its own recipe book for infrastructure, instead of re-explaining your kitchen's layout every single time you ask for help.</p>
-
-    <a class="download-btn" href="/obsidian-starter-kit.zip" download>
-      <span class="download-icon">↓</span>
-      <span>
-        <strong>obsidian-starter-kit.zip</strong>
-        <small>5 playbooks — Coolify deploys, Cloudflare Tunnel subdomains, API gotchas, and the "add professional touches" polish checklist. No credentials, all placeholders.</small>
-      </span>
-    </a>
-  </section>
-
   <footer>
-    <span class="mode-normal">A complete git-push-to-deploy loop on dedicated x86 hardware, controlled entirely from VS Code — no monitor, no browser dashboard required to build or ship.</span>
-    <span class="mode-simple">A small, quiet kitchen that cooks automatically whenever you update a recipe, run entirely by remote control from your own laptop.</span>
+    <span class="mode-normal">Built sitting at the box with Claude driving the infra work, then handed off to VS Code Remote-SSH for everything after — no monitor, no browser dashboard required once you've graduated.</span>
+    <span class="mode-simple">A small, quiet kitchen that cooks automatically whenever you update a recipe, set up with an assistant chef watching over your shoulder, run entirely by remote control from your own laptop once it's open for business.</span>
   </footer>
 
 </div>
