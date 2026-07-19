@@ -97,6 +97,7 @@
     .endstate li:nth-child(2){animation-delay:.24s;}
     .endstate li:nth-child(3){animation-delay:.30s;}
     .endstate li:nth-child(4){animation-delay:.36s;}
+    .endstate li:nth-child(9),.endstate li:nth-child(10){animation-delay:.42s;}
   }
   @keyframes rise{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
   @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
@@ -518,6 +519,9 @@
 
           <li class="mode-normal">Because it's plain x86, every Docker image and install script you'd use on a normal Linux server works here unmodified — no ARM compatibility tax.</li>
           <li class="mode-simple">It's a regular little PC, not a special hobbyist one — so ordinary instructions just work, no translating required.</li>
+
+          <li class="mode-normal">You don't need to already know GitHub, Docker, or Coolify. Once Claude has access, it does the actual mechanics — you make the calls only you can make (your domain, your choices) and approve what needs approving.</li>
+          <li class="mode-simple">You don't need to already know any of the kitchen equipment. Once your assistant chef has the keys, they run it — you just decide the things only you can decide.</li>
         </ul>
       </div>
 
@@ -658,8 +662,8 @@ sudo apt install -y code</code></pre>
     </div>
     <h2>Hand the build off to Claude</h2>
 
-    <p class="mode-normal">Everything from here through the first deploy test is really one conversation with Claude in that chat panel — including fetching its own playbooks. Paste this in, swapping in your own domain, and Claude downloads the kit, reads it, and keeps going:</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> sending your assistant chef to go pick up their own recipe book, read it, and start cooking — not handing it to them yourself.</p>
+    <p class="mode-normal">Everything from here through the first deploy test is really one conversation with Claude in that chat panel — including fetching its own playbooks. This is the moment this whole tutorial has been building to: <b>from here, you don't need to know GitHub, Docker, Coolify, or Cloudflare</b> — Claude does the actual mechanics for all of them once it has access. Your job through step 09 is approving prompts, browser logins, and a couple of choices only you can make (your domain, your subdomain). Paste this in, swapping in your own domain, and Claude downloads the kit, reads it, and keeps going:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> sending your assistant chef to go pick up their own recipe book, read it, and start cooking — not handing it to them yourself. From here, you don't need to learn any of the kitchen equipment by name. Claude already knows it. You just answer when asked.</p>
 
     <pre><code>Download the starter kit at
 https://devbox.cmdward.xyz/obsidian-starter-kit.zip, unzip it to
@@ -677,6 +681,9 @@ through anything that needs my input.</code></pre>
       </span>
     </a>
 
+    <p class="mode-normal dim">Despite the name, you don't need the Obsidian app for any of this — it's just a folder of plain markdown files. "Obsidian" here only means it's shaped to also work as an Obsidian vault, if you ever want one later.</p>
+    <p class="mode-simple dim">The name is just a leftover from the notebook app this style of recipe book usually lives in — you don't need to install anything called Obsidian. It's just a folder of text files Claude reads directly.</p>
+
     <p class="mode-normal dim">That's the whole handoff — no config file to write. <b>Optional, for later:</b> if you want Claude to pick the kit up automatically in every future session without being told, save a <code>CLAUDE.md</code> (project-level, or <code>~/.claude/CLAUDE.md</code> for everywhere) with the pointer line from the kit's own <code>_index.md</code>. Not needed to get started today.</p>
     <p class="mode-simple dim">That's the whole handoff — nothing to set up first. <b>Optional, for later:</b> there's a way to make Claude remember this recipe book automatically every time, without you asking — the kit's own <code>_index.md</code> explains it, whenever you want it.</p>
 
@@ -692,8 +699,8 @@ through anything that needs my input.</code></pre>
     </div>
     <h2>Docker</h2>
 
-    <p class="mode-normal">Docker is what lets Coolify package and run apps consistently. Claude installs it and adds your user to the <code>docker</code> group — roughly:</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> Claude installing standardized shipping containers in the kitchen — every app gets packed the same way from here on. You don't need to type this, just know it's happening.</p>
+    <p class="mode-normal">Docker is what lets Coolify package and run apps consistently. Claude installs it and adds your user to the <code>docker</code> group — roughly. <b>You don't need to know Docker</b> to get through this step; Claude does.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> Claude installing standardized shipping containers in the kitchen — every app gets packed the same way from here on. You don't need to type this, or even understand it — just know it's happening.</p>
 
     <div class="video-embed wide">
       <iframe src="https://www.youtube.com/embed/1fL54Q-wa54?start=95" title="What is Docker in 4 Minutes" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -712,8 +719,8 @@ sudo usermod -aG docker <span class="s">$USER</span></code></pre>
     </div>
     <h2>Cloudflare Tunnel</h2>
 
-    <p class="mode-normal">This is what lets the outside internet reach an app on the box without opening any ports on your router. Claude installs cloudflared, logs into your Cloudflare account (a browser tab opens right here on the box for you to approve), creates a tunnel, and writes the ingress config — roughly:</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a P.O. box. People send mail (web traffic) to a public address, and it gets forwarded to your actual house (the box) without anyone knowing exactly where that house is. A browser tab will pop up asking you to approve the connection — that's your one part in this step.</p>
+    <p class="mode-normal">This is what lets the outside internet reach an app on the box without opening any ports on your router. Claude installs cloudflared, logs into your Cloudflare account (a browser tab opens right here on the box for you to approve), creates a tunnel, and writes the ingress config — roughly. <b>You don't need to know Cloudflare or networking</b> for this — approving that one browser tab is your whole job here.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a P.O. box. People send mail (web traffic) to a public address, and it gets forwarded to your actual house (the box) without anyone knowing exactly where that house is. A browser tab will pop up asking you to approve the connection — that's your one part in this step, nothing technical required.</p>
 
     <div class="video-embed wide">
       <iframe src="https://www.youtube.com/embed/2Gku4u7X9SE" title="Cloudflare Explained in 5 Minutes (for beginners)" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -753,8 +760,8 @@ sudo systemctl enable --now cloudflared</code></pre>
     </div>
     <h2>Coolify</h2>
 
-    <p class="mode-normal">Claude installs Coolify with one script. Then you'll open the dashboard yourself, right here in the box's browser, to finish the setup wizard and grab an API token so Claude can drive it from the chat panel too.</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> hiring a shift manager. Claude does the hiring; you just open the office door once to shake hands. From then on, whenever a recipe updates, the shift manager starts cooking the new version on its own.</p>
+    <p class="mode-normal">Claude installs Coolify with one script. Then you'll open the dashboard yourself, right here in the box's browser, to finish the setup wizard and grab an API token so Claude can drive it from the chat panel too. <b>You never need to learn Coolify's dashboard in any depth</b> — clicking through its first-run wizard once is as deep as you have to go.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> hiring a shift manager. Claude does the hiring; you just open the office door once to shake hands. From then on, whenever a recipe updates, the shift manager starts cooking the new version on its own — you never have to learn how the kitchen equipment works.</p>
 
     <div class="video-embed wide">
       <iframe src="https://www.youtube.com/embed/HZanV8A9QnA" title="Coolify in 2 minutes explained! The Vercel alternative" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -775,8 +782,8 @@ sudo systemctl enable --now cloudflared</code></pre>
     </div>
     <h2>Wire up GitHub</h2>
 
-    <p class="mode-normal">This connects the shift manager (Coolify) to the recipe book (your code). If you don't have a GitHub account yet, sign up now in the box's browser — Claude will use it from here. Claude will:</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> introducing your shift manager to the recipe book so it knows where to look for updates.</p>
+    <p class="mode-normal">This connects the shift manager (Coolify) to the recipe book (your code). If you don't have a GitHub account yet, sign up now in the box's browser — Claude will use it from here. <b>You don't need to know git or GitHub</b> — no commands, no commits to write by hand. Claude will:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> introducing your shift manager to the recipe book so it knows where to look for updates. You don't need to know how the recipe book itself works — just that it exists.</p>
 
     <div class="video-embed">
       <iframe src="https://www.youtube.com/embed/RoeJPTY7maI" title="GitHub explained in 60 seconds" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -801,8 +808,8 @@ sudo systemctl enable --now cloudflared</code></pre>
     </div>
     <h2>Deploy something trivial, end to end</h2>
 
-    <p class="mode-normal">Before trusting this box with anything real, Claude proves the whole loop once with a throwaway app, while you watch:</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a test order before opening night — make sure a plate can actually travel the full route before you trust it with real customers.</p>
+    <p class="mode-normal">Before trusting this box with anything real, Claude proves the whole loop once with a throwaway app, while you watch. Your only real job in this whole step is opening a link on your phone — everything before that is Claude's:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a test order before opening night — make sure a plate can actually travel the full route before you trust it with real customers. You're just the one tasting the result, not cooking it.</p>
 
     <ol class="steplist">
       <li>Point Coolify at a small repo (even a static "hello" page).</li>
