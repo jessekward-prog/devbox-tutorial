@@ -648,9 +648,16 @@ sudo apt install -y code</code></pre>
 
     <ol class="steplist">
       <li>Unzip the kit somewhere on the box — e.g. <code>~/playbooks</code>.</li>
-      <li>Create a <code>CLAUDE.md</code> file (project-level, or <code>~/.claude/CLAUDE.md</code> for everywhere) with the pointer line from the kit's own <code>_index.md</code>.</li>
-      <li>In the Claude Code chat panel, tell it to continue — something like: <code>Read ~/playbooks/_index.md, then let's continue this tutorial — set up Docker, a Cloudflare Tunnel for yourdomain.com, install Coolify, and wire up GitHub. Walk me through anything that needs my input.</code></li>
+      <li>Paste this into the Claude Code chat panel, swapping in your own domain:</li>
     </ol>
+
+    <pre><code>Read ~/playbooks/_index.md and use those playbooks. Then let's continue
+this tutorial: set up Docker, a Cloudflare Tunnel for yourdomain.com,
+install Coolify, and wire up GitHub. Walk me through anything that
+needs my input.</code></pre>
+
+    <p class="mode-normal dim">That's the whole handoff — no config file to write. <b>Optional, for later:</b> if you want Claude to pick the kit up automatically in every future session without being told, save a <code>CLAUDE.md</code> (project-level, or <code>~/.claude/CLAUDE.md</code> for everywhere) with the pointer line from the kit's own <code>_index.md</code>. Not needed to get started today.</p>
+    <p class="mode-simple dim">That's the whole handoff — nothing to set up first. <b>Optional, for later:</b> there's a way to make Claude remember this recipe book automatically every time, without you asking — the kit's own <code>_index.md</code> explains it, whenever you want it.</p>
 
     <p class="mode-normal dim">From step 05 on, this tutorial explains what Claude is doing and why — not commands for you to type yourself. You'll mostly be reading, approving <code>sudo</code> prompts, and making a few calls (your domain, your subdomain, your repo name).</p>
     <p class="mode-simple dim">From here down, think of these sections as watching over your assistant chef's shoulder — you'll see what's happening and why, and you only step in when they need something only you have: a password, a domain name, a decision.</p>
