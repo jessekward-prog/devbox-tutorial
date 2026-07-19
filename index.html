@@ -482,7 +482,7 @@
   <div class="chrome">
     <div class="chrome-bar">
       <span class="dot a"></span><span class="dot b"></span><span class="dot c"></span>
-      <span class="chrome-title">cmdward@devbox: ~/tutorials</span>
+      <span class="chrome-title">you@devbox: ~/tutorials</span>
     </div>
     <div class="chrome-body">
       <div class="prompt-line"><span class="sym">$</span> cat headless-devbox-setup.md</div>
@@ -552,7 +552,7 @@
       <li><b>An everyday computer</b> (Mac, Windows, or Linux) that you already use — this is where VS Code lives and where you'll do all your typing. <span class="mode-simple dim">This is your "walkie-talkie" — not the kitchen itself.</span></li>
       <li><b>VS Code</b> installed on that everyday computer. Download it from <code>code.visualstudio.com</code> if you don't already have it.</li>
       <li><b>A free GitHub account</b> — this is where your project's code will be stored and versioned. <span class="mode-simple dim">Think of it as the recipe book the kitchen reads from.</span></li>
-      <li><b>A domain name</b> added to a free <b>Cloudflare</b> account (any registrar works — Cloudflare just needs to manage its DNS). This tutorial uses <code>cmdward.xyz</code> as the example; swap in your own. <span class="mode-simple dim">This becomes the delivery address people use to find what the kitchen makes.</span></li>
+      <li><b>A domain name</b> added to a free <b>Cloudflare</b> account (any registrar works — Cloudflare just needs to manage its DNS). This tutorial uses <code>yourdomain.com</code> as the example; swap in your own. <span class="mode-simple dim">This becomes the delivery address people use to find what the kitchen makes.</span></li>
     </ul>
 
     <p class="mode-normal dim">No prior Linux or server experience is assumed — every command below is explained before you run it.</p>
@@ -625,7 +625,7 @@ ssh-keygen -t ed25519 -C <span class="s">"your-email@example.com"</span>
       <li>Copy your public key onto the box (you'll still log in with your password this one time):</li>
     </ol>
     <pre><code><span class="c"># from your everyday computer</span>
-ssh-copy-id cmdward@&lt;devbox-ip&gt;</code></pre>
+ssh-copy-id &lt;your-username&gt;@&lt;devbox-ip&gt;</code></pre>
 
     <ol class="steplist" start="4">
       <li>Lock the box down to key-only login, disabling passwords entirely:</li>
@@ -640,7 +640,7 @@ sudo systemctl restart ssh</code></pre>
     <pre><code><span class="c"># ~/.ssh/config on your everyday computer</span>
 Host devbox
     HostName &lt;devbox-ip&gt;
-    User cmdward
+    User &lt;your-username&gt;
     IdentityFile ~/.ssh/id_ed25519</code></pre>
   </section>
 
@@ -703,13 +703,13 @@ cloudflared tunnel create devbox</code></pre>
     <p class="mode-normal">Write <code>/etc/cloudflared/config.yml</code> (sudo — this is the file the systemd service actually reads, not the copy in your home directory):</p>
     <p class="mode-simple">Now tell the tunnel which local address to forward each delivery to — write this file (needs <code>sudo</code> since it's a system file):</p>
     <pre><code>tunnel: &lt;tunnel-id-from-create&gt;
-credentials-file: /home/cmdward/.cloudflared/&lt;tunnel-id&gt;.json
+credentials-file: /home/&lt;your-username&gt;/.cloudflared/&lt;tunnel-id&gt;.json
 
 ingress:
-  - hostname: myapp.cmdward.xyz
+  - hostname: myapp.yourdomain.com
     service: http://localhost:3000
   - service: http_status:404</code></pre>
-    <pre><code>cloudflared tunnel route dns devbox myapp.cmdward.xyz
+    <pre><code>cloudflared tunnel route dns devbox myapp.yourdomain.com
 sudo cloudflared service install
 sudo systemctl enable --now cloudflared</code></pre>
 
@@ -768,7 +768,7 @@ sudo systemctl enable --now cloudflared</code></pre>
     <ol class="steplist">
       <li>Point Coolify at a small repo (even a static "hello" page).</li>
       <li>Set the domain to the hostname you routed in step 06.</li>
-      <li>Deploy, then open <code>https://myapp.cmdward.xyz</code> from your phone on mobile data (not wifi), to confirm it's really public.</li>
+      <li>Deploy, then open <code>https://myapp.yourdomain.com</code> from your phone on mobile data (not wifi), to confirm it's really public.</li>
     </ol>
 
     <div class="gotcha mode-normal">If the app talks to Postgres later, append <code>?sslmode=disable</code> to the connection string — Coolify's bundled Postgres doesn't speak SSL and most database libraries try it by default.</div>
