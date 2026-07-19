@@ -635,9 +635,17 @@ sudo apt install -y code</code></pre>
     </div>
     <h2>Hand the build off to Claude</h2>
 
-    <p class="mode-normal">Everything from here through the first deploy test is really one conversation with Claude in that chat panel. Download the starter kit below — right here in the box's own browser — unzip it, and point Claude at it before asking it to continue.</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> handing your assistant chef their own recipe book instead of explaining your kitchen from scratch. Download it, unzip it, and Claude reads from it before doing anything below.</p>
+    <p class="mode-normal">Everything from here through the first deploy test is really one conversation with Claude in that chat panel — including fetching its own playbooks. Paste this in, swapping in your own domain, and Claude downloads the kit, reads it, and keeps going:</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> sending your assistant chef to go pick up their own recipe book, read it, and start cooking — not handing it to them yourself.</p>
 
+    <pre><code>Download the starter kit at
+https://devbox.cmdward.xyz/obsidian-starter-kit.zip, unzip it to
+~/playbooks, and read _index.md — use those playbooks going forward.
+Then let's continue this tutorial: set up Docker, a Cloudflare Tunnel
+for yourdomain.com, install Coolify, and wire up GitHub. Walk me
+through anything that needs my input.</code></pre>
+
+    <p class="mode-normal dim">Prefer to grab the kit yourself first and look through it? It's the same download either way:</p>
     <a class="download-btn" href="/obsidian-starter-kit.zip" download>
       <span class="download-icon">↓</span>
       <span>
@@ -645,16 +653,6 @@ sudo apt install -y code</code></pre>
         <small>5 playbooks — Coolify deploys, Cloudflare Tunnel subdomains, API gotchas, and the "add professional touches" polish checklist. No credentials, all placeholders.</small>
       </span>
     </a>
-
-    <ol class="steplist">
-      <li>Unzip the kit somewhere on the box — e.g. <code>~/playbooks</code>.</li>
-      <li>Paste this into the Claude Code chat panel, swapping in your own domain:</li>
-    </ol>
-
-    <pre><code>Read ~/playbooks/_index.md and use those playbooks. Then let's continue
-this tutorial: set up Docker, a Cloudflare Tunnel for yourdomain.com,
-install Coolify, and wire up GitHub. Walk me through anything that
-needs my input.</code></pre>
 
     <p class="mode-normal dim">That's the whole handoff — no config file to write. <b>Optional, for later:</b> if you want Claude to pick the kit up automatically in every future session without being told, save a <code>CLAUDE.md</code> (project-level, or <code>~/.claude/CLAUDE.md</code> for everywhere) with the pointer line from the kit's own <code>_index.md</code>. Not needed to get started today.</p>
     <p class="mode-simple dim">That's the whole handoff — nothing to set up first. <b>Optional, for later:</b> there's a way to make Claude remember this recipe book automatically every time, without you asking — the kit's own <code>_index.md</code> explains it, whenever you want it.</p>
