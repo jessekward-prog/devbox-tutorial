@@ -303,6 +303,18 @@
   pre code .s{color:var(--accent-bright);} /* string/highlight */
   pre code .p{color:var(--accent);} /* prompt char */
 
+  /* ---- "paste to Claude" prompt blocks ---- */
+  .prompt-label{
+    display:block;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ok);
+    margin:14px 0 6px;
+  }
+  pre.prompt{border-color:rgba(166,227,161,0.28);}
+  pre.prompt code{color:var(--ok);}
+
   .copy-btn{
     position:absolute;top:8px;right:8px;
     display:flex;align-items:center;gap:5px;
@@ -665,7 +677,8 @@ sudo apt install -y code</code></pre>
     <p class="mode-normal">Everything from here through the first deploy test is really one conversation with Claude in that chat panel — including fetching its own playbooks. This is the moment this whole tutorial has been building to: <b>from here, you don't need to know GitHub, Docker, Coolify, or Cloudflare</b> — Claude does the actual mechanics for all of them once it has access. Your job through step 09 is approving prompts, browser logins, and a couple of choices only you can make (your domain, your subdomain). Paste this in, swapping in your own domain, and Claude downloads the kit, reads it, and keeps going:</p>
     <p class="mode-simple"><span class="analogy-tag">Think of it as</span> sending your assistant chef to go pick up their own recipe book, read it, and start cooking — not handing it to them yourself. From here, you don't need to learn any of the kitchen equipment by name. Claude already knows it. You just answer when asked.</p>
 
-    <pre><code>Download the starter kit at
+    <span class="prompt-label">Prompt</span>
+    <pre class="prompt"><code>Download the starter kit at
 https://devbox.cmdward.xyz/obsidian-starter-kit.zip, unzip it to
 ~/playbooks, and read _index.md — use those playbooks going forward.
 Then let's continue this tutorial: set up Docker, a Cloudflare Tunnel
@@ -894,7 +907,8 @@ Host devbox
     <div class="why mode-simple"><b>Why this one's a bit different:</b> everything else in this tutorial reaches the box through the sealed delivery tunnel. This one instead gets its own private, invitation-only road between just your devices — nothing about it is reachable from the open internet, ever.</div>
 
     <p class="mode-normal">Ask Claude to set it up — this installs Tailscale on the box, joins your private network, and self-hosts the RustDesk relay bound to that private address only:</p>
-    <pre><code>Install Tailscale on this box and connect it to my Tailscale account
+    <span class="prompt-label">Prompt</span>
+    <pre class="prompt"><code>Install Tailscale on this box and connect it to my Tailscale account
 (open a browser tab for me to approve it). Then self-host a RustDesk
 relay server (hbbs + hbbr) using Docker, bound only to the box's
 Tailscale IP — not the public network. Tell me the Tailscale IP,
@@ -943,41 +957,47 @@ my other devices.</code></pre>
 
     <p class="mode-normal dim"><b>Restart anything that crashes, automatically.</b> Docker containers don't restart themselves after a crash unless told to — the simplest possible safety net.</p>
     <p class="mode-simple dim"><b>If something falls over, stand it back up.</b> By default, a crashed app just stays crashed until someone notices.</p>
-    <pre><code>Check every Docker container Coolify is running and make sure each one
+    <span class="prompt-label">Prompt</span>
+    <pre class="prompt"><code>Check every Docker container Coolify is running and make sure each one
 has a restart policy of "unless-stopped". Fix any that don't, and tell
 me which ones you changed.</code></pre>
 
     <p class="mode-normal dim"><b>Watch a specific app and respin it if it goes unreachable.</b> A container can show "healthy" in Docker while still being unreachable from the outside — this exact thing has happened before on a similar box.</p>
     <p class="mode-simple dim"><b>Check the food actually arrived, not just that the kitchen said it left.</b> Sometimes everything looks fine from the inside while nothing's actually getting through.</p>
-    <pre><code>Set up a systemd timer that checks every 5 minutes whether
+    <span class="prompt-label">Prompt</span>
+    <pre class="prompt"><code>Set up a systemd timer that checks every 5 minutes whether
 https://myapp.yourdomain.com responds. If it doesn't, restart that
 app's container automatically and log what happened. Show me the
 timer and service files before enabling them.</code></pre>
 
     <p class="mode-normal dim"><b>Watch the tunnel itself, not just the apps behind it.</b> Cloudflare Tunnel already reconnects on ordinary network blips — there's no dynamic-IP problem to solve, since it's an outbound-only connection. The real gap is cloudflared getting stuck in a restart-loop and never recovering on its own, which has happened before from an unrelated DNS issue.</p>
     <p class="mode-simple dim"><b>Make sure the delivery van didn't just stop running.</b> The van finds its way back after normal traffic — but it can occasionally stall completely and needs someone to notice and restart it.</p>
-    <pre><code>Set up a systemd timer that runs every 5 minutes and checks two
+    <span class="prompt-label">Prompt</span>
+    <pre class="prompt"><code>Set up a systemd timer that runs every 5 minutes and checks two
 things: that the cloudflared service is active, and that each of my
 public hostnames actually responds over HTTPS. If either check fails,
 restart cloudflared and log what happened so I can see it later.</code></pre>
 
     <p class="mode-normal dim"><b>Rule out a stale DNS resolver before it causes cascading failures.</b> A plain, hand-edited <code>/etc/resolv.conf</code> with a dead nameserver listed first can make every lookup take ~5 seconds — slow enough that services relying on fast startup (like cloudflared) restart-loop for reasons that look unrelated to DNS.</p>
     <p class="mode-simple dim"><b>Make sure the phone book isn't broken.</b> If every lookup takes 5 seconds because of a bad first entry, everything downstream looks broken in confusing, unrelated ways.</p>
-    <pre><code>Check whether /etc/resolv.conf is a proper symlink into
+    <span class="prompt-label">Prompt</span>
+    <pre class="prompt"><code>Check whether /etc/resolv.conf is a proper symlink into
 systemd-resolved, not a plain file with a stale or unreachable
 nameserver listed first. If it's wrong, fix it and tell me what you
 changed.</code></pre>
 
     <p class="mode-normal dim"><b>Make Docker wait for the network before starting containers.</b> If you ever add Tailscale, a VPN, or anything else Docker depends on, containers can start before that interface is ready and silently fail to bind their ports — invisible until you actually test from outside.</p>
     <p class="mode-simple dim"><b>Don't open the kitchen before the road to it is finished.</b> If the kitchen starts before its own driveway is built, deliveries quietly fail without anyone noticing right away.</p>
-    <pre><code>If any of my containers depend on a network interface like Tailscale
+    <span class="prompt-label">Prompt</span>
+    <pre class="prompt"><code>If any of my containers depend on a network interface like Tailscale
 or a VPN being up first, set up a systemd unit that makes Docker wait
 for that interface before it starts. I don't want port bindings to
 silently fail after a reboot.</code></pre>
 
     <p class="mode-normal dim"><b>Protect the desktop session from memory pressure.</b> Since this box runs a full desktop (not headless-only), <code>systemd-oomd</code> can kill the desktop session under memory pressure once Docker, Coolify, and several containers are all running at once — worth checking now, before it happens while you're not watching.</p>
     <p class="mode-simple dim"><b>Don't let a busy day crash the whole kitchen.</b> Because this box has a real desktop underneath, it's possible for it to shut itself down under heavy load if nothing's guarding against it.</p>
-    <pre><code>Check whether systemd-oomd could kill my desktop session under memory
+    <span class="prompt-label">Prompt</span>
+    <pre class="prompt"><code>Check whether systemd-oomd could kill my desktop session under memory
 pressure once Docker, Coolify, and a few app containers are all
 running. If it's a real risk on this box, mitigate it so a busy day
 doesn't crash my desktop session.</code></pre>
