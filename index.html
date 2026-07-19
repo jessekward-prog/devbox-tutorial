@@ -459,6 +459,19 @@
   .download-btn strong{display:block;color:var(--fg);font-size:14px;font-weight:600;}
   .download-btn small{display:block;color:var(--fg-dim);font-size:12px;margin-top:2px;}
 
+  /* ---- video embed ---- */
+  .video-embed{
+    margin:14px 0 6px;
+    max-width:300px;
+    border-radius:8px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:var(--bg-inset);
+    aspect-ratio:9/16;
+  }
+  .video-embed iframe{width:100%;height:100%;border:0;display:block;}
+  .video-caption{font-size:12px;color:var(--fg-faint);margin:0 0 14px;}
+
   @media (max-width:520px){
     .toc ol{columns:1;}
     .chrome-body{padding:20px 18px 22px;}
@@ -822,6 +835,38 @@ Host devbox
 
     <p class="mode-normal">Once that's confirmed, unplug the monitor and keyboard. From here on, everything happens over SSH — and because it's a full desktop underneath, you can always plug a screen back in later if you want to.</p>
     <p class="mode-simple">Once that's confirmed, unplug the screen and keyboard. From here on, you manage the kitchen from home — but the back door's still there if you ever want to walk in.</p>
+  </section>
+
+  <!-- rustdesk -->
+  <section class="step" id="rustdesk">
+    <div class="step-head">
+      <div class="step-eyebrow"><span class="num">Bonus /</span> Before you unplug</div>
+    </div>
+    <h2>Consider a GUI fallback: self-hosted RustDesk (optional)</h2>
+
+    <p class="mode-normal">Remote-SSH is a terminal, not a screen — great for editing and running commands, useless if you ever want to actually <em>see</em> the desktop (a GUI installer, a visual glitch, anything that isn't a command line). RustDesk gives you that, self-hosted on this same box, so you're not depending on RustDesk's own public relay servers either.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> a spare set of eyes into the kitchen, not just a walkie-talkie. VS Code is great for giving instructions; sometimes you actually want to look at the screen yourself.</p>
+
+    <div class="video-embed">
+      <iframe src="https://www.youtube.com/embed/OAD6h3yimlc" title="RustDesk is amazing! — NetworkChuck" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+    <p class="video-caption"><a href="https://youtube.com/shorts/OAD6h3yimlc" target="_blank" rel="noopener">Watch on YouTube</a> — a quick look at what RustDesk is, from NetworkChuck.</p>
+
+    <div class="why mode-normal"><b>Why not route this through the tunnel like everything else:</b> the Cloudflare Tunnel used throughout this tutorial proxies HTTP(S) traffic — RustDesk's relay needs raw TCP/UDP, which doesn't pass through the same way. The practical no-extra-tool option is forwarding RustDesk's own handful of ports directly to this box on your router. That's a real, deliberate exception to "nothing is ever exposed directly" — a much smaller surface than opening your whole network, but still worth being deliberate about, not routing everything else this way.</div>
+    <div class="why mode-simple"><b>Why this one's different:</b> everything else in this tutorial reaches the box through the sealed delivery tunnel. This one needs its own small, specific door instead — five ports, nothing else — because the tunnel doesn't carry this particular kind of traffic.</div>
+
+    <p class="mode-normal dim">If you'd rather not open anything on your router at all, <a href="https://tailscale.com" target="_blank" rel="noopener">Tailscale</a> is the standard alternative — it creates a private network between your devices with zero open ports, at the cost of installing it on every device that wants to connect.</p>
+
+    <p class="mode-normal">Ask Claude to set up the self-hosted relay:</p>
+    <pre><code>Self-host a RustDesk relay server (hbbs + hbbr) on this box using
+Docker. Once it's running, tell me the server address and public key
+I'll need to enter in the RustDesk client on my other devices.</code></pre>
+
+    <ol class="steplist">
+      <li>In your router's admin page, forward these ports to the box's local IP: <code>21115-21119 TCP</code>, <code>21116 UDP</code>.</li>
+      <li>Install the RustDesk client on your everyday computer, open its network settings, and enter the server address + key Claude gave you.</li>
+      <li>Connect once while the monitor's still attached, to confirm the picture actually shows up before you rely on it.</li>
+    </ol>
   </section>
 
   <!-- 11 -->
