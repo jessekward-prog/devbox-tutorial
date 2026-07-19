@@ -16,6 +16,7 @@ That's the whole trick. From then on, instead of typing out your Coolify token l
 - [[Add-Cloudflare-Subdomain]] — wire a new subdomain to a host port through a Cloudflare Tunnel
 - [[Coolify-API]] — API auth, endpoints, and the gotchas that cost real time
 - [[Cloudflared-Config]] — tunnel config file locations, restart vs reload, validation
+- [[Professional-Touches]] — say "add professional touches" once an app works, to trigger a pass of animation, haptics, touch targets, PWA shell, and the other details that make a web app feel native
 
 ## Conventions
 
