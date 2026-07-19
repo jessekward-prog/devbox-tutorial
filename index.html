@@ -25,6 +25,7 @@
     --border:#332e28;
     --border-soft:#221f1a;
     --ok:#a6e3a1;
+    --info:#89b4fa;
     --mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
   }
 
@@ -314,6 +315,28 @@
   }
   pre.prompt{border-color:rgba(166,227,161,0.28);}
   pre.prompt code{color:var(--ok);}
+
+  /* ---- "you type this yourself" terminal blocks ---- */
+  .terminal-label{
+    display:block;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--info);
+    margin:14px 0 6px;
+  }
+  pre.terminal{border-color:rgba(137,180,250,0.28);}
+  pre.terminal code{color:var(--info);}
+
+  /* ---- "Claude runs this" reference blocks — quiet label, no colour change ---- */
+  .claude-label{
+    display:block;
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--fg-faint);
+    margin:14px 0 6px;
+  }
 
   .copy-btn{
     position:absolute;top:8px;right:8px;
@@ -659,9 +682,10 @@
     <h2>Install VS Code + Claude Code, right here on the box</h2>
 
     <p class="mode-normal">Install VS Code directly on the box, then add the Claude Code extension and sign in. This gives you a proper chat panel next to your files — not a bare terminal — and it's what actually drives the rest of this build.</p>
-    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> hiring your assistant chef and giving them a proper office, not just a walkie-talkie. Install VS Code right on this screen, add the Claude Code extension, and sign in. From here you'll mostly be talking to Claude through a chat panel, not typing commands yourself.</p>
+    <p class="mode-simple"><span class="analogy-tag">Think of it as</span> hiring your assistant chef and giving them a proper office, not just a walkie-talkie. This one setup step is still you typing, since the chef hasn't arrived yet — from the next step on, you'll mostly be talking through a chat panel instead.</p>
 
-    <pre><code><span class="c"># on the box, in a terminal (Zorin's app menu → Terminal) —</span>
+    <span class="terminal-label">You run this</span>
+    <pre class="terminal"><code><span class="c"># on the box, in a terminal (Zorin's app menu → Terminal) —</span>
 <span class="c"># or use the Software store instead, if you'd rather click through it</span>
 wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
 sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
@@ -735,6 +759,7 @@ through anything that needs my input.</code></pre>
     </div>
     <p class="video-caption"><a href="https://www.youtube.com/watch?v=1fL54Q-wa54&t=95s" target="_blank" rel="noopener">Watch on YouTube</a> — what Docker actually is, in about four minutes.</p>
 
+    <span class="claude-label">Claude runs this</span>
     <pre><code>curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker <span class="s">$USER</span></code></pre>
   </section>
@@ -755,6 +780,7 @@ sudo usermod -aG docker <span class="s">$USER</span></code></pre>
     </div>
     <p class="video-caption"><a href="https://www.youtube.com/watch?v=2Gku4u7X9SE" target="_blank" rel="noopener">Watch on YouTube</a> — what Cloudflare itself is, in general (not Tunnel-specific, but useful context if you've never used it).</p>
 
+    <span class="claude-label">Claude runs this</span>
     <pre><code><span class="c"># install cloudflared</span>
 curl -fsSL https://pkg.cloudflare.com/cloudflare-main.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloudflare-main.gpg
 echo <span class="s">"deb [signed-by=/usr/share/keyrings/cloudflare-main.gpg] https://pkg.cloudflare.com/cloudflared $(lsb_release -cs) main"</span> | sudo tee /etc/apt/sources.list.d/cloudflared.list
@@ -764,6 +790,7 @@ sudo apt update && sudo apt install cloudflared
 cloudflared tunnel login
 cloudflared tunnel create devbox</code></pre>
 
+    <span class="claude-label">Claude writes this</span>
     <pre><code><span class="c">/etc/cloudflared/config.yml</span>
 tunnel: &lt;tunnel-id-from-create&gt;
 credentials-file: /home/&lt;your-username&gt;/.cloudflared/&lt;tunnel-id&gt;.json
@@ -772,6 +799,7 @@ ingress:
   - hostname: myapp.yourdomain.com
     service: http://localhost:3000
   - service: http_status:404</code></pre>
+    <span class="claude-label">Claude runs this</span>
     <pre><code>cloudflared tunnel route dns devbox myapp.yourdomain.com
 sudo cloudflared service install
 sudo systemctl enable --now cloudflared</code></pre>
@@ -796,6 +824,7 @@ sudo systemctl enable --now cloudflared</code></pre>
     </div>
     <p class="video-caption"><a href="https://www.youtube.com/watch?v=HZanV8A9QnA" target="_blank" rel="noopener">Watch on YouTube</a> — what Coolify actually is, in about two minutes.</p>
 
+    <span class="claude-label">Claude runs this</span>
     <pre><code>curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash</code></pre>
 
     <p class="mode-normal dim">Dashboard comes up at <code>http://localhost:8000</code> — open it right there on the box, finish the wizard, then mint an API token from <b>Profile → Keys &amp; Tokens</b> and hand it to Claude.</p>
@@ -864,26 +893,30 @@ sudo systemctl enable --now cloudflared</code></pre>
       <li>In your router's admin page, add a <b>DHCP reservation</b> for the box's MAC address, so it always gets the same local IP. (Claude can't reach your router — this one's on you.)</li>
       <li>Ask Claude to enable SSH on the box:</li>
     </ol>
+    <span class="claude-label">Claude runs this</span>
     <pre><code>sudo apt install -y openssh-server
 sudo systemctl enable --now ssh</code></pre>
 
     <ol class="steplist" start="3">
       <li>On your <b>everyday computer</b> — the one Claude isn't running on — generate an SSH key if you don't already have one, then copy it to the box (you'll still use your password this one time):</li>
     </ol>
-    <pre><code><span class="c"># on your everyday computer — skip if `ls ~/.ssh/id_ed25519.pub` already shows a file</span>
+    <span class="terminal-label">You run this</span>
+    <pre class="terminal"><code><span class="c"># on your everyday computer — skip if `ls ~/.ssh/id_ed25519.pub` already shows a file</span>
 ssh-keygen -t ed25519 -C <span class="s">"your-email@example.com"</span>
 ssh-copy-id &lt;your-username&gt;@&lt;devbox-ip&gt;</code></pre>
 
     <ol class="steplist" start="4">
       <li>Ask Claude to lock the box to key-only login:</li>
     </ol>
+    <span class="claude-label">Claude runs this</span>
     <pre><code>sudo sed -i <span class="s">'s/^#\?PasswordAuthentication.*/PasswordAuthentication no/'</span> /etc/ssh/sshd_config
 sudo systemctl restart ssh</code></pre>
 
     <ol class="steplist" start="5">
       <li>On your everyday computer: install VS Code + the <b>Remote-SSH</b> extension, add a config entry, then connect.</li>
     </ol>
-    <pre><code><span class="c"># ~/.ssh/config on your everyday computer</span>
+    <span class="terminal-label">You create this</span>
+    <pre class="terminal"><code><span class="c"># ~/.ssh/config on your everyday computer</span>
 Host devbox
     HostName &lt;devbox-ip&gt;
     User &lt;your-username&gt;
@@ -894,6 +927,7 @@ Host devbox
     <ol class="steplist" start="6">
       <li>Ask Claude to turn off auto-suspend, so the box doesn't fall asleep with no screen to wake it:</li>
     </ol>
+    <span class="claude-label">Claude runs this</span>
     <pre><code>gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type <span class="s">'nothing'</span></code></pre>
 
     <div class="gotcha mode-normal"><b>Test before you disconnect.</b> Confirm the Remote-SSH terminal actually works, from step 5, before unplugging anything. If something's subtly wrong with SSH, you want to find out with the monitor still connected, not after.</div>
