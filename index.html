@@ -153,6 +153,25 @@
     max-width:56ch;
   }
 
+  /* ---- header text + art split ---- */
+  .header-top{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:flex-start;
+    gap:22px;
+  }
+  .header-text{flex:1 1 320px;min-width:240px;}
+  .header-art{
+    display:block;
+    width:230px;
+    max-width:100%;
+    flex-shrink:0;
+    border-radius:8px;
+  }
+  @media (max-width:560px){
+    .header-art{width:100%;max-width:280px;margin:0 auto;}
+  }
+
   .cursor{
     display:inline-block;
     width:8px;height:16px;
@@ -551,11 +570,16 @@
       <span class="chrome-title">you@devbox: ~/tutorials</span>
     </div>
     <div class="chrome-body">
-      <div class="prompt-line"><span class="sym">$</span> cat headless-devbox-setup.md</div>
-      <h1>Headless dev box <span class="amp">&</span> VS Code remote workflow<span class="cursor"></span></h1>
+      <div class="header-top">
+        <div class="header-text">
+          <div class="prompt-line"><span class="sym">$</span> cat headless-devbox-setup.md</div>
+          <h1>Headless dev box <span class="amp">&</span> VS Code remote workflow<span class="cursor"></span></h1>
 
-      <p class="tagline mode-normal">A small dedicated machine you build sitting right in front of it — Zorin OS, VS Code, and Claude Code driving the actual infra work — then graduate to fully headless once everything's proven working. Written for someone doing this for the first time — no prior server experience assumed.</p>
-      <p class="tagline mode-simple">Picture opening a tiny takeout kitchen. You set it up standing right in the kitchen, with an assistant chef doing the actual cooking while you watch and approve — and only hand the keys to remote management once you've confirmed deliveries actually work. No dining room, no front counter, and eventually no need to ever stand in the kitchen again.</p>
+          <p class="tagline mode-normal">A small dedicated machine you build sitting right in front of it — Zorin OS, VS Code, and Claude Code driving the actual infra work — then graduate to fully headless once everything's proven working. Written for someone doing this for the first time — no prior server experience assumed.</p>
+          <p class="tagline mode-simple">Picture opening a tiny takeout kitchen. You set it up standing right in the kitchen, with an assistant chef doing the actual cooking while you watch and approve — and only hand the keys to remote management once you've confirmed deliveries actually work. No dining room, no front counter, and eventually no need to ever stand in the kitchen again.</p>
+        </div>
+        <img class="header-art crt-frame" src="/cmd-system.png" alt="Retro amber CRT terminal and tower PC, pixel art">
+      </div>
 
       <div class="endstate">
         <ul>
