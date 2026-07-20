@@ -477,15 +477,31 @@
   .toc a.toc-done::after{content:" ✓";}
 
   /* ---- starter kit download ---- */
+  /* ---- reusable amber CRT frame: glow border + scanline overlay ---- */
+  .crt-frame{
+    position:relative;
+    overflow:hidden;
+    border:1px solid rgba(255,165,0,0.4);
+    box-shadow:0 0 0 1px rgba(255,165,0,0.06), 0 0 26px rgba(255,140,0,0.16), inset 0 0 24px rgba(255,140,0,0.05);
+  }
+  .crt-frame::after{
+    content:"";
+    position:absolute;inset:0;
+    background:repeating-linear-gradient(0deg, rgba(255,180,80,0.07) 0px, rgba(255,180,80,0.07) 1px, transparent 1px, transparent 3px);
+    pointer-events:none;
+    border-radius:inherit;
+  }
+
   .download-btn{
     display:flex;align-items:center;gap:14px;
-    margin-top:16px;padding:14px 18px;min-height:44px;
-    border:1px solid var(--border);border-radius:8px;
+    height:auto;min-height:44px;
+    margin-top:16px;padding:14px 18px;
+    border-radius:8px;
     background:var(--bg-raised);
     text-decoration:none;border-bottom:none;
     transition:border-color .15s ease, background .15s ease;
   }
-  .download-btn:hover{border-color:rgba(255,165,0,0.4);background:var(--bg-inset);}
+  .download-btn:hover{border-color:rgba(255,165,0,0.65);background:var(--bg-inset);}
   .download-icon{
     display:flex;align-items:center;justify-content:center;
     width:36px;height:36px;min-width:36px;border-radius:6px;
@@ -725,7 +741,7 @@ for yourdomain.com, install Coolify, and wire up GitHub. Walk me
 through anything that needs my input.</code></pre>
 
     <p class="mode-normal dim">Prefer to grab the kit yourself first and look through it? It's the same download either way:</p>
-    <a class="download-btn" href="/obsidian-starter-kit.zip" download>
+    <a class="download-btn crt-frame" href="/obsidian-starter-kit.zip" download>
       <span class="download-icon">↓</span>
       <span>
         <strong>obsidian-starter-kit.zip</strong>
