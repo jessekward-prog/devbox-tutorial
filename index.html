@@ -510,6 +510,23 @@
     pointer-events:none;
     border-radius:inherit;
   }
+  .crt-sweep::before{
+    content:"";
+    position:absolute;left:-10%;right:-10%;height:22px;top:-28px;
+    pointer-events:none;z-index:1;
+    background:linear-gradient(180deg, transparent,
+      rgba(255,165,0,0.10) 30%,
+      rgba(255,180,80,0.24) 50%,
+      rgba(255,165,0,0.10) 70%, transparent);
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .crt-sweep::before{animation:crtSweep 13s linear infinite;}
+  }
+  @keyframes crtSweep{
+    0%{top:-28px;transform:skewY(-.8deg);}
+    50%{transform:skewY(.8deg);}
+    100%{top:110%;transform:skewY(-.8deg);}
+  }
 
   .download-btn{
     display:flex;align-items:center;gap:14px;
@@ -578,8 +595,8 @@
           <p class="tagline mode-normal">A small dedicated machine you build sitting right in front of it — Zorin OS, VS Code, and Claude Code driving the actual infra work — then graduate to fully headless once everything's proven working. Written for someone doing this for the first time — no prior server experience assumed.</p>
           <p class="tagline mode-simple">Picture opening a tiny takeout kitchen. You set it up standing right in the kitchen, with an assistant chef doing the actual cooking while you watch and approve — and only hand the keys to remote management once you've confirmed deliveries actually work. No dining room, no front counter, and eventually no need to ever stand in the kitchen again.</p>
         </div>
-        <div class="header-art crt-frame">
-          <img src="/cmd-system.png" alt="Retro amber CRT terminal and tower PC, pixel art">
+        <div class="header-art crt-frame crt-sweep">
+          <img src="/cmd-system.png" alt="Retro amber pixel-art tower PC with a smashed-off monitor head, symbolizing a headless server">
         </div>
       </div>
 
